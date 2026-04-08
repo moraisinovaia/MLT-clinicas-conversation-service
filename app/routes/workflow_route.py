@@ -164,6 +164,13 @@ async def execute_workflow(
 
     # ── RESPOSTA_FILA ─────────────────────────────────────────────────────────
     if intent == IntentType.RESPOSTA_FILA:
+        # "SIM" enquanto aguarda confirmação de agendamento → executar o schedule,
+        # não buscar fila_id (que não existe nesse contexto).
+        if (
+            entities.resposta_fila == "SIM"
+            and estado_atual == ConversationState.CONFIRMANDO
+        ):
+            return await _execute_schedule(entities, cliente_id, session_id, db, gt_inova)
         return await _handle_resposta_fila(
             entities, estado_atual, cliente_id, session_id, db, gt_inova
         )

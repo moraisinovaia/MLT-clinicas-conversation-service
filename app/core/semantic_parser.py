@@ -24,7 +24,7 @@ Schema obrigatório:
   "entities": {
     "medico_nome":       "<str|null>",
     "atendimento_nome":  "<str|null>",
-    "data_preferida":    "<YYYY-MM-DD|null>",
+    "data_preferida":    "<texto livre com data ou período preferido, ex: '2025-05-15', 'próxima segunda', 'semana que vem', 'qualquer dia da próxima semana' | null>",
     "periodo":           "<manha|tarde|null>",
     "convenio":          "<str bruto|null>",
     "agendamento_id":    "<uuid|null>",
