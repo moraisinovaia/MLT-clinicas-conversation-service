@@ -87,8 +87,8 @@ STATE=$(get_state "$R")
 
 # =============================================================================
 step "TURN 4 — Data"
-info "Mensagem: qualquer dia da próxima semana, manhã"
-R=$(post "qualquer dia da próxima semana, manhã")
+info "Mensagem: dia 14/04/2026, manhã"
+R=$(post "dia 14/04/2026, manhã")
 show "$R"
 STATE=$(get_state "$R")
 [[ "$STATE" == "coletando_dados" || "$STATE" == "confirmando" ]] && pass "Turn 4 → $STATE" || fail "Turn 4 → $STATE"
