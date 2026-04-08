@@ -75,8 +75,8 @@ class GTInovaClient:
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url.rstrip("/")
         self.headers  = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type":  "application/json",
+            "x-api-key":    api_key,
+            "Content-Type": "application/json",
         }
 
     # ── Helper de requisição ──────────────────────────────────────────────────
@@ -165,15 +165,23 @@ class GTInovaClient:
         paciente_celular: str | None = None,
         data_nascimento:  str | None = None,
         periodo:          str | None = None,
+        hora_consulta:    str | None = None,
     ) -> GTInovaResult:
+        # hora_consulta: usa a fornecida, ou deriva do período, ou padrão manhã
+        _hora = hora_consulta or (
+            "09:00" if (periodo or "").lower().startswith("manh")
+            else "14:00" if (periodo or "").lower().startswith("tard")
+            else "09:00"
+        )
         return await self._request("POST", "/schedule", {
             "medico_nome":      medico_nome,
             "atendimento_nome": atendimento_nome,
-            "data_preferida":   data_preferida,
+            "data_consulta":    data_preferida,
+            "hora_consulta":    _hora,
             "convenio":         convenio,
             "cliente_id":       cliente_id,
             "paciente_nome":    paciente_nome,
-            "paciente_celular": paciente_celular,
+            "celular":          paciente_celular,
             "data_nascimento":  data_nascimento,
             "periodo":          periodo,
         })
