@@ -164,15 +164,17 @@ async def execute_workflow(
             ConversationState.TRANSBORDO.value,
         )
 
+    # ── CONFIRMAR em estado CONFIRMANDO → executar o agendamento pendente ────
+    # "SIM" pode ser classificado como CONFIRMAR ou RESPOSTA_FILA dependendo do LLM.
+    # Em ambos os casos, se estiver em CONFIRMANDO, o correto é chamar /schedule.
+    if estado_atual == ConversationState.CONFIRMANDO and intent in (
+        IntentType.CONFIRMAR,
+        IntentType.RESPOSTA_FILA,
+    ):
+        return await _execute_schedule(entities, cliente_id, session_id, db, gt_inova)
+
     # ── RESPOSTA_FILA ─────────────────────────────────────────────────────────
     if intent == IntentType.RESPOSTA_FILA:
-        # "SIM" enquanto aguarda confirmação de agendamento → executar o schedule,
-        # não buscar fila_id (que não existe nesse contexto).
-        if (
-            entities.resposta_fila == "SIM"
-            and estado_atual == ConversationState.CONFIRMANDO
-        ):
-            return await _execute_schedule(entities, cliente_id, session_id, db, gt_inova)
         return await _handle_resposta_fila(
             entities, estado_atual, cliente_id, session_id, db, gt_inova
         )
