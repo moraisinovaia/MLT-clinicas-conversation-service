@@ -44,8 +44,10 @@ def _format_confirmation(intent: IntentType, e: EntitySet) -> str:
         if e.atendimento_nome:
             lines.append(f"Tipo: {e.atendimento_nome}")
         if e.data_preferida:
-            lines.append(f"Data preferida: {e.data_preferida}")
-        if e.periodo:
+            lines.append(f"Data: {e.data_preferida}")
+        if e.hora_consulta:
+            lines.append(f"Horário: {e.hora_consulta}")
+        if e.periodo and not e.hora_consulta:
             lines.append(f"Período: {e.periodo.capitalize()}")
         if e.convenio_canonico or e.convenio:
             lines.append(f"Convênio: {e.convenio_canonico or e.convenio}")
@@ -233,7 +235,12 @@ async def _handle_agendar(
                         ConversationState.COLETANDO_DADOS.value)
         return ([OutboundMessage(text=AMBIGUOUS_RESPONSE)], None)
 
-    # Dados completos + aguardando confirmação do paciente
+    # Dados completos + sem slot escolhido → buscar disponibilidade primeiro
+    if (estado_atual in (ConversationState.COLETANDO_DADOS, ConversationState.TRIAGEM)
+            and not entities.hora_consulta):
+        return await _handle_offer_availability(entities, cliente_id, session_id, db, gt_inova)
+
+    # Dados completos + slot escolhido → mostrar confirmação
     if estado_atual == ConversationState.COLETANDO_DADOS or \
        estado_atual == ConversationState.TRIAGEM:
         return (
@@ -310,6 +317,65 @@ async def _execute_schedule(
 
     # Todos os outros erros: usar error.message direto
     return ([OutboundMessage(text=error.message)], ConversationState.TRIAGEM.value)
+
+
+async def _handle_offer_availability(
+    entities:   EntitySet,
+    cliente_id: str,
+    session_id: str,
+    db:         asyncpg.Connection,
+    gt_inova:   GTInovaClient | None,
+) -> tuple[list[OutboundMessage], str | None]:
+    """
+    Chama /availability, mostra disponibilidade e vai direto para CONFIRMANDO.
+
+    A GT Inova usa ordem de chegada (sem slot fixo): retorna data real e hora_inicio
+    do período disponível. Capturamos esses valores em entities para usar no /schedule.
+    """
+    if gt_inova is None:
+        return (
+            [OutboundMessage(text=_format_confirmation(IntentType.AGENDAR, entities))],
+            ConversationState.CONFIRMANDO.value,
+        )
+
+    avail = await gt_inova.get_availability(
+        medico_nome      = entities.medico_nome or "",
+        atendimento_nome = entities.atendimento_nome or "",
+        cliente_id       = cliente_id,
+        periodo          = entities.periodo,
+    )
+
+    if isinstance(avail, GTInovaError):
+        logger.warning("availability_failed session=%s err=%s", session_id, avail.error_code)
+        # Pula disponibilidade: vai para confirmação com os dados que temos
+        return (
+            [OutboundMessage(text=_format_confirmation(IntentType.AGENDAR, entities))],
+            ConversationState.CONFIRMANDO.value,
+        )
+
+    # Extrai data real e hora_inicio do primeiro período disponível
+    data_real = avail.data.get("data") or entities.data_preferida
+    hora_real = None
+    for periodo in avail.data.get("periodos", []):
+        if periodo.get("disponivel") and periodo.get("vagas_disponiveis", 0) > 0:
+            hora_real = periodo.get("hora_inicio")
+            break
+
+    # Atualiza entities com dados reais (persiste via save_session no caller)
+    if data_real:
+        entities.data_preferida = data_real
+    if hora_real:
+        entities.hora_consulta = hora_real
+
+    # Mensagem de disponibilidade já formatada para WhatsApp
+    avail_text = avail.data.get("message") or avail.data.get("mensagem_whatsapp") or _format_availability(avail.data)
+
+    # Exibe disponibilidade + confirmação em sequência
+    messages = [
+        OutboundMessage(text=avail_text),
+        OutboundMessage(text=_format_confirmation(IntentType.AGENDAR, entities), delay_ms=1200),
+    ]
+    return (messages, ConversationState.CONFIRMANDO.value)
 
 
 async def _handle_slot_taken(

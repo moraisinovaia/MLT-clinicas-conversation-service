@@ -44,6 +44,10 @@ class EntitySet(BaseModel):
     agendamento_id:   str | None = None
     resposta_fila:    Literal["SIM", "NAO"] | None = None
 
+    # Slot escolhido após /availability
+    hora_consulta:    str | None = None   # "HH:MM" — preenchido após paciente escolher slot
+    slot_id:          str | None = None   # id do slot retornado pela API, se houver
+
     # Dados do paciente (extraídos da conversa ou de /patient-search)
     paciente_nome:    str | None = None
     paciente_celular: str | None = None

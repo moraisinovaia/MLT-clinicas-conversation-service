@@ -29,6 +29,8 @@ Schema obrigatório:
     "convenio":          "<str bruto|null>",
     "agendamento_id":    "<uuid|null>",
     "resposta_fila":     "<SIM|NAO|null>",
+    "hora_consulta":     "<HH:MM quando paciente escolhe horário específico, ex: '09:00', '14:30' | null>",
+    "slot_id":           "<id do slot se mencionado explicitamente | null>",
     "paciente_nome":     "<str|null>",
     "paciente_celular":  "<str só dígitos|null>",
     "data_nascimento":   "<YYYY-MM-DD|null>"
