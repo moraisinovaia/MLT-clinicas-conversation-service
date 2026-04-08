@@ -105,7 +105,14 @@ class GTInovaClient:
                 _cb_record_success()
 
                 if resp.status_code >= 400:
-                    body = resp.json()
+                    try:
+                        body = resp.json()
+                    except Exception:
+                        body = {}
+                    logger.error(
+                        "gt_inova_error path=%s status=%s body=%s payload=%s",
+                        path, resp.status_code, body, payload,
+                    )
                     return GTInovaError(
                         error_code=body.get("error_code", "API_ERROR"),
                         message=body.get("message", "Erro no sistema de agendamento."),
