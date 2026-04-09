@@ -158,9 +158,11 @@ async def execute_workflow(
     entities = parsed.entities
 
     # ── TRANSBORDO ────────────────────────────────────────────────────────────
+    # Sinaliza TRANSBORDO para o conversation.py — a mensagem e o action
+    # são decididos lá, com base em transbordo_humano_ativo da clínica.
     if intent == IntentType.TRANSBORDO:
         return (
-            [OutboundMessage(text="Vou te transferir para um de nossos atendentes. Um momento! 😊")],
+            [],  # mensagem composta pelo conversation.py
             ConversationState.TRANSBORDO.value,
         )
 

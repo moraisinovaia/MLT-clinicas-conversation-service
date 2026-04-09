@@ -77,7 +77,25 @@ async def conversation(req: ConversationRequest, request: Request):
         novo_estado  = ConversationState.TRIAGEM   # fallback seguro
 
         try:
-            # ── 2. Carregar sessão ────────────────────────────────────────
+            # ── 2a. Configuração da clínica (transbordo, fallback) ────────
+            clinica_cfg = await db.fetchrow(
+                """
+                SELECT transbordo_humano_ativo,
+                       mensagem_transbordo,
+                       mensagem_fallback_sem_humano
+                FROM configuracoes_clinica
+                WHERE id = $1
+                """,
+                req.cliente_id,
+            )
+            transbordo_ativo = bool(clinica_cfg["transbordo_humano_ativo"]) if clinica_cfg else False
+            msg_transbordo   = (clinica_cfg["mensagem_transbordo"] or "") if clinica_cfg else ""
+            msg_fallback_sem_humano = (
+                clinica_cfg["mensagem_fallback_sem_humano"]
+                or "No momento não temos atendentes disponíveis. Posso continuar te ajudando aqui."
+            ) if clinica_cfg else "No momento não temos atendentes disponíveis. Posso continuar te ajudando aqui."
+
+            # ── 2b. Carregar sessão ───────────────────────────────────────
             ctx = await load_session(req.session_id, req.cliente_id, db)
             novo_estado = ctx.estado_atual
 
@@ -175,11 +193,19 @@ async def conversation(req: ConversationRequest, request: Request):
             if decision.route not in ("workflow", "clarify"):
                 novo_estado = resolve_next_state(ctx.estado_atual, parsed.intent)
 
-            # ── 10b. Resolve action para o N8N ───────────────────────────
-            # action é o contrato externo com o N8N — independente de new_state.
-            # N8N não precisa conhecer estados internos.
+            # ── 10b. Resolve action para o N8N (decisão por clínica) ─────
+            # action é o contrato externo com o N8N.
+            # Handoff só ocorre se a clínica tem transbordo_humano_ativo=true.
             if novo_estado == ConversationState.TRANSBORDO:
-                action = "handoff"
+                if transbordo_ativo:
+                    action = "handoff"
+                    if msg_transbordo:
+                        messages = [OutboundMessage(text=msg_transbordo)]
+                else:
+                    # Clínica 100% IA: não avança para TRANSBORDO, usa fallback
+                    action = "send"
+                    messages = [OutboundMessage(text=msg_fallback_sem_humano)]
+                    novo_estado = ctx.estado_atual
             else:
                 action = "send"
 
