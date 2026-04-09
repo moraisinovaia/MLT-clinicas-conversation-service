@@ -175,6 +175,14 @@ async def conversation(req: ConversationRequest, request: Request):
             if decision.route not in ("workflow", "clarify"):
                 novo_estado = resolve_next_state(ctx.estado_atual, parsed.intent)
 
+            # ── 10b. Resolve action para o N8N ───────────────────────────
+            # action é o contrato externo com o N8N — independente de new_state.
+            # N8N não precisa conhecer estados internos.
+            if novo_estado == ConversationState.TRANSBORDO:
+                action = "handoff"
+            else:
+                action = "send"
+
             # ── 11. Salvar sessão ─────────────────────────────────────────
             resposta_texto = " ".join(m.text for m in messages)
             await save_session(ctx, db, novo_estado, resposta_texto, req.message)
