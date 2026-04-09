@@ -51,13 +51,23 @@ def normalize_text(text: str) -> str:
 # ── Pre-parser ───────────────────────────────────────────────────────────────
 
 def pre_parse(
-    message: str,
-    state:   ConversationState,
+    message:    str,
+    state:      ConversationState,
+    media_type: str = "text",
 ) -> ParsedIntent | None:
     """
     Fast path para casos determinísticos.
     Retorna None se nenhuma regra bater → chamar LLM.
+
+    media_type="audio"|"image"|"document" sem mensagem transcrita →
+    retorna None para que o LLM receba contexto adequado.
+    Caso a Recepção já tenha transcrito o áudio em texto,
+    media_type="audio" chega com message preenchida e segue normalmente.
     """
+    # Mídia não-texto sem conteúdo: nenhuma regra regex pode ajudar
+    if media_type != "text" and not message.strip():
+        return None
+
     normalized = normalize_text(message)
 
     # Emergência: prioridade máxima, qualquer estado

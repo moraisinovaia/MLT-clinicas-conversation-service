@@ -100,7 +100,7 @@ async def conversation(req: ConversationRequest, request: Request):
             novo_estado = ctx.estado_atual
 
             # ── 3. Pre-parser (sem LLM) ───────────────────────────────────
-            parsed = pre_parse(req.message, ctx.estado_atual)
+            parsed = pre_parse(req.message, ctx.estado_atual, req.media_type)
 
             # ── 4. Semantic parse (LLM) ───────────────────────────────────
             if parsed is None:
@@ -110,6 +110,7 @@ async def conversation(req: ConversationRequest, request: Request):
                         message=req.message,
                         context=context_str,
                         cliente_info=req.cliente_id,
+                        media_type=req.media_type,
                     )
                 except ParseError as e:
                     logger.warning("parse_error trace=%s err=%s", trace_id, e)

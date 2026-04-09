@@ -96,13 +96,20 @@ async def semantic_parse(
     message:       str,
     context:       str,   # resumo/turnos anteriores montado pela session
     cliente_info:  str,   # nome e contexto da clínica (sem dados sensíveis)
+    media_type:    str = "text",
 ) -> ParsedIntent:
     """
     Chama o LLM e retorna ParsedIntent validado.
     Em caso de falha: retorna intent DUVIDA com needs_clarification=True
     (nunca lança exceção para o caller — a conversa não para).
     """
+    media_hint = (
+        f"Tipo de mídia recebida: {media_type}. "
+        "Considere isso ao interpretar a intenção.\n\n"
+    ) if media_type != "text" else ""
+
     user_content = (
+        f"{media_hint}"
         f"Contexto da conversa:\n{context}\n\n"
         f"Clínica: {cliente_info}\n\n"
         f"Mensagem do paciente: {message}"
