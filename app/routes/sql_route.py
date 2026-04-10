@@ -2,12 +2,11 @@
 Rota sql — Fase 2.
 
 Queries em:
-  - convenios_medico  → convênios aceitos por médico
-  - medicos           → dados cadastrais do médico
+  - medicos           → dados cadastrais básicos (CRM, especialidade)
   - configuracoes_clinica → endereço, telefone, horário
-  - procedimentos_clinica → exames disponíveis
 
-Fonte: SQL local = informativo. GT Inova API = autoritativo no agendamento.
+Fonte: SQL local = informativo. Elegibilidade de convênio nunca responde aqui —
+a autoridade é a GT Inova (roteada pelo policy_engine via workflow).
 """
 from __future__ import annotations
 import asyncpg
@@ -24,78 +23,29 @@ async def execute_sql(
 ) -> list[OutboundMessage]:
     e = intent.entities
 
-    # ── Convênios aceitos por médico específico ───────────────────────────────
-    if e.medico_nome and not e.convenio:
-        rows = await db.fetch(
+    # ── Dados básicos do médico (CRM, especialidade) ──────────────────────────
+    # Convenio nunca chega aqui — policy_engine garante via Regra 4/4b.
+    if e.medico_nome:
+        row = await db.fetchrow(
             """
-            SELECT m.nome_completo, array_agg(cm.convenio_nome ORDER BY cm.convenio_nome) AS convenios
-            FROM medicos m
-            JOIN convenios_medico cm ON cm.medico_id = m.id
-            WHERE m.cliente_id = $1
-              AND LOWER(m.nome_completo) ILIKE $2
-            GROUP BY m.nome_completo
+            SELECT nome, crm, especialidade
+            FROM medicos
+            WHERE cliente_id = $1
+              AND LOWER(nome) ILIKE $2
+              AND ativo = true
             LIMIT 1
             """,
             cliente_id,
             f"%{e.medico_nome.lower()}%",
-        )
-        if rows:
-            r = rows[0]
-            convs = ", ".join(r["convenios"])
-            return [OutboundMessage(
-                text=f"{r['nome_completo']} atende pelos convênios: {convs}."
-            )]
-        return [OutboundMessage(text=_NO_INFO)]
-
-    # ── Clínica aceita determinado convênio? ──────────────────────────────────
-    if e.convenio and not e.medico_nome:
-        canonical = e.convenio_canonico or e.convenio
-        row = await db.fetchrow(
-            """
-            SELECT COUNT(*) AS total
-            FROM convenios_medico cm
-            JOIN medicos m ON m.id = cm.medico_id
-            WHERE m.cliente_id     = $1
-              AND cm.convenio_nome ILIKE $2
-            """,
-            cliente_id,
-            f"%{canonical}%",
-        )
-        if row and row["total"] > 0:
-            return [OutboundMessage(
-                text=f"Sim, a clínica aceita {canonical}. Para confirmar a disponibilidade "
-                     f"no agendamento, informe o convênio no momento da marcação."
-            )]
-        return [OutboundMessage(
-            text=f"Não encontrei {canonical} na nossa lista de convênios. "
-                 f"Entre em contato com a recepção para confirmar."
-        )]
-
-    # ── Convênios aceitos por médico + convênio (dupla entidade) ─────────────
-    if e.medico_nome and e.convenio:
-        canonical = e.convenio_canonico or e.convenio
-        row = await db.fetchrow(
-            """
-            SELECT m.nome_completo
-            FROM medicos m
-            JOIN convenios_medico cm ON cm.medico_id = m.id
-            WHERE m.cliente_id     = $1
-              AND LOWER(m.nome_completo) ILIKE $2
-              AND cm.convenio_nome ILIKE $3
-            LIMIT 1
-            """,
-            cliente_id,
-            f"%{e.medico_nome.lower()}%",
-            f"%{canonical}%",
         )
         if row:
-            return [OutboundMessage(
-                text=f"Sim, {row['nome_completo']} atende pelo {canonical}."
-            )]
-        return [OutboundMessage(
-            text=f"Não encontrei {e.medico_nome} atendendo pelo {canonical}. "
-                 f"Confirme com a recepção."
-        )]
+            parts = [row["nome"]]
+            if row["crm"]:
+                parts.append(f"CRM: {row['crm']}")
+            if row["especialidade"]:
+                parts.append(f"Especialidade: {row['especialidade']}")
+            return [OutboundMessage(text="\n".join(parts))]
+        return [OutboundMessage(text=_NO_INFO)]
 
     # ── Endereço / contato da clínica ─────────────────────────────────────────
     row = await db.fetchrow(

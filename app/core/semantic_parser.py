@@ -35,8 +35,9 @@ Schema obrigatório:
     "paciente_celular":  "<str só dígitos|null>",
     "data_nascimento":   "<YYYY-MM-DD|null>"
   },
-  "risk_level":          "<low|medium|high>",
-  "needs_clarification": <true|false>
+  "risk_level":            "<low|medium|high>",
+  "needs_clarification":   <true|false>,
+  "is_operational_query":  <true|false>
 }
 
 Intents válidos:
@@ -51,6 +52,11 @@ Regras de risk_level:
 
 needs_clarification = true quando a mensagem for ambígua e faltar informação
 essencial para continuar (ex: "quero marcar" sem médico nem procedimento).
+
+is_operational_query = true quando a resposta depende de dado em tempo real da API
+de agendamentos: agenda, disponibilidade de vaga, elegibilidade de convênio, ou
+confirmação de serviço ativo de médico (ex: "Dr. X faz Y?", "aceita Unimed?",
+"tem vaga?"). False para perguntas explicativas, de preparo, perfil ou orientação.
 """
 
 
@@ -87,6 +93,7 @@ def _parse_raw(raw: str) -> ParsedIntent:
             entities=EntitySet(**(data.get("entities") or {})),
             risk_level=data.get("risk_level", "low"),
             needs_clarification=bool(data.get("needs_clarification", False)),
+            is_operational_query=bool(data.get("is_operational_query", False)),
         )
     except Exception as e:
         raise ParseError(f"Erro ao montar ParsedIntent: {e} | data={data}")

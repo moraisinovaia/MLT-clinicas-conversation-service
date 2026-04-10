@@ -38,6 +38,8 @@ EXPLANATORY_INTENTS = {
 class RagFilters:
     risk_max:     str = "high"
     source_types: list[str] = field(default_factory=list)
+    doctor_id:    str | None = None    # uuid — preenchido por resolve_rag_ids()
+    procedure_id: str | None = None   # uuid — preenchido por resolve_rag_ids()
 
 
 @dataclass
@@ -76,12 +78,39 @@ def decide_route(
     if intent.intent == IntentType.EMERGENCIA:
         return RouteDecision(route="direct", reason="emergência — protocolo imediato")
 
-    # Regra 4: dúvida sobre disponibilidade/agenda → workflow (/availability)
-    # Nunca RAG para agenda — dados mudam em tempo real
-    if intent.intent == IntentType.DUVIDA and intent.entities.has_schedule_context():
-        return RouteDecision(route="workflow", reason="disponibilidade via GT Inova /availability")
+    # Regra 4: dúvida sobre dado operacional vivo → workflow via GT Inova.
+    # Usa is_operational_query do semantic_parse (LLM semântico) em vez de keyword
+    # matching. Cobre: agenda, disponibilidade, elegibilidade, serviço ativo.
+    if intent.intent == IntentType.DUVIDA and intent.is_operational_query:
+        return RouteDecision(
+            route="workflow",
+            reason="dado operacional vivo via GT Inova",
+        )
 
-    # Regra 5: dúvida factual simples (médico ou convênio, sem procedimento) → sql
+    # Regra 4b: convenio explicitamente extraído pelo LLM → workflow (GT Inova é
+    # autoridade sobre elegibilidade, independente de keywords na mensagem).
+    if intent.intent == IntentType.DUVIDA and intent.entities.convenio:
+        return RouteDecision(
+            route="workflow",
+            reason="convenio detectado — elegibilidade via GT Inova",
+        )
+
+    # Regra 5: perfil estável do médico → RAG
+    if (
+        intent.intent == IntentType.DUVIDA
+        and intent.entities.touches_doctor_profile_context(intent.mensagem_usuario)
+    ):
+        return RouteDecision(
+            route="rag",
+            reason="perfil estavel do medico via conhecimento aprovado",
+            filters=RagFilters(
+                risk_max=intent.risk_level,
+                source_types=["doctor_bio", "procedure_info"],
+            ),
+        )
+
+    # Regra 5b: dúvida factual simples e não operacional → sql
+    # Convenio nunca chega aqui (Regra 4/4b garante). Só medico_nome sem convenio.
     if intent.intent == IntentType.DUVIDA and intent.entities.is_factual_only():
         return RouteDecision(route="sql", reason="fato estruturado — SQL local")
 
@@ -101,7 +130,7 @@ def decide_route(
             ),
         )
 
-    # Regra 7: dúvida com procedimento mencionado → hybrid (sql + rag)
+    # Regra 7: dúvida com procedimento mencionado e sem contexto operacional → hybrid
     if intent.intent == IntentType.DUVIDA and intent.entities.atendimento_nome:
         return RouteDecision(
             route="hybrid",

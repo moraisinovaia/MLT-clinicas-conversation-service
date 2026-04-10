@@ -30,7 +30,7 @@ from app.core.policy_engine import decide_route
 from app.core.state_machine import resolve_next_state
 from app.core.session import (
     load_session, save_session, build_context_string,
-    merge_entities, compute_missing_fields,
+    merge_entities, compute_missing_fields, resolve_rag_ids,
 )
 from app.integrations.supabase_client import get_pool
 from app.routes import clarify, direct, rag, sql_route, workflow_route
@@ -74,6 +74,7 @@ async def conversation(req: ConversationRequest, request: Request):
         messages:    list[OutboundMessage] = []
         action       = "send"
         handoff      = None
+        feedback_id: str | None = None
         novo_estado  = ConversationState.TRIAGEM   # fallback seguro
 
         try:
@@ -142,6 +143,18 @@ async def conversation(req: ConversationRequest, request: Request):
             # ── 8. Policy engine ──────────────────────────────────────────
             decision = decide_route(parsed, ctx.estado_atual)
 
+            # ── 8b. Resolve IDs para filtros RAG (doctor_id, procedure_id) ─
+            # Só executa quando a rota usa RAG — evita query desnecessária.
+            if decision.route in ("rag", "hybrid") and decision.filters is not None:
+                doctor_id, procedure_id = await resolve_rag_ids(
+                    medico_nome      = parsed.entities.medico_nome,
+                    atendimento_nome = parsed.entities.atendimento_nome,
+                    cliente_id       = req.cliente_id,
+                    db               = db,
+                )
+                decision.filters.doctor_id    = doctor_id
+                decision.filters.procedure_id = procedure_id
+
             # ── 9. Executor da rota ───────────────────────────────────────
             if decision.route == "direct":
                 messages = direct.build_direct_response(parsed)
@@ -160,7 +173,7 @@ async def conversation(req: ConversationRequest, request: Request):
                     novo_estado = ConversationState.COLETANDO_DADOS
 
             elif decision.route == "rag":
-                messages = await rag.execute_rag(
+                messages, feedback_id = await rag.execute_rag(
                     parsed, decision.filters, req.cliente_id, db,
                     session_id=req.session_id, query=req.message,
                 )
@@ -170,7 +183,7 @@ async def conversation(req: ConversationRequest, request: Request):
 
             elif decision.route == "hybrid":
                 sql_msgs = await sql_route.execute_sql(parsed, req.cliente_id, db)
-                rag_msgs = await rag.execute_rag(
+                rag_msgs, feedback_id = await rag.execute_rag(
                     parsed, decision.filters, req.cliente_id, db,
                     session_id=req.session_id, query=req.message,
                 )
@@ -244,4 +257,5 @@ async def conversation(req: ConversationRequest, request: Request):
         session_id=req.session_id,
         cliente_id=req.cliente_id,
         trace_id=trace_id,
+        feedback_id=feedback_id,
     )

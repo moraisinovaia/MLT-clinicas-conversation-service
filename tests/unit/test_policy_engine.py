@@ -9,6 +9,7 @@ def make_intent(
     confidence=0.95,
     needs_clarification=False,
     risk_level="low",
+    is_operational_query=False,
     **entity_kwargs,
 ) -> ParsedIntent:
     return ParsedIntent(
@@ -17,6 +18,7 @@ def make_intent(
         entities=EntitySet(**entity_kwargs),
         risk_level=risk_level,
         needs_clarification=needs_clarification,
+        is_operational_query=is_operational_query,
     )
 
 
@@ -71,9 +73,9 @@ def test_duvida_with_medico_no_procedure_routes_sql():
     p = make_intent(medico_nome="Dr. Marcelo")
     assert decide_route(p, S.TRIAGEM).route == "sql"
 
-def test_duvida_with_convenio_no_procedure_routes_sql():
+def test_duvida_with_convenio_no_procedure_routes_workflow():
     p = make_intent(convenio="Unimed")
-    assert decide_route(p, S.TRIAGEM).route == "sql"
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
 
 def test_duvida_with_medico_and_procedure_routes_hybrid():
     """Médico + procedimento → hybrid (não sql)."""
@@ -101,6 +103,50 @@ def test_explanatory_intents_route_rag(intent, expected_sources):
 
 def test_duvida_with_procedure_routes_hybrid():
     p = make_intent(atendimento_nome="Colonoscopia")
+    assert decide_route(p, S.TRIAGEM).route == "hybrid"
+
+
+def test_duvida_operacional_convenio_routes_workflow():
+    # Regra 4b: entities.convenio set → sempre workflow, independente de is_operational_query
+    p = make_intent(medico_nome="Dr. Hermann", convenio="HGU")
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
+
+
+def test_duvida_operacional_servico_ativo_routes_workflow():
+    # Regra 4: is_operational_query=True (LLM detecta "faz X?" como operacional)
+    p = make_intent(
+        medico_nome="Dr. Hermann",
+        atendimento_nome="Gonioscopia",
+        is_operational_query=True,
+    )
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
+
+
+def test_duvida_operacional_lista_de_convenios_por_medico_routes_workflow():
+    # Regra 4: is_operational_query=True (LLM detecta "quais convênios?" como operacional)
+    p = make_intent(medico_nome="Dr. Hermann", is_operational_query=True)
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
+
+
+def test_duvida_operacional_lista_de_servicos_por_medico_routes_workflow():
+    # Regra 4: is_operational_query=True (LLM detecta "quais procedimentos?" como operacional)
+    p = make_intent(medico_nome="Dr. Hermann", is_operational_query=True)
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
+
+
+def test_duvida_perfil_medico_idade_nao_vai_para_workflow():
+    # is_operational_query=False (perfil estável) → Regra 5 → rag
+    p = make_intent(medico_nome="Dr. Hermann")
+    p.mensagem_usuario = "Dr. Hermann atende criancas?"
+    d = decide_route(p, S.TRIAGEM)
+    assert d.route == "rag"
+    assert d.filters is not None
+    assert d.filters.source_types == ["doctor_bio", "procedure_info"]
+
+
+def test_duvida_explicativa_sem_contexto_operacional_nao_vai_para_workflow():
+    # is_operational_query=False → não dispara Regra 4 → hybrid
+    p = make_intent(atendimento_nome="Gonioscopia")
     assert decide_route(p, S.TRIAGEM).route == "hybrid"
 
 

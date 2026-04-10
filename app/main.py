@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.api.v1 import conversation, health
+from app.api.v1 import conversation, feedback, health
 from app.integrations.supabase_client import get_pool, close_pool
 from app.integrations.gt_inova import GTInovaClient
 from app.core.config import settings
@@ -28,3 +28,4 @@ app = FastAPI(
 
 app.include_router(health.router)
 app.include_router(conversation.router, prefix="/api/v1")
+app.include_router(feedback.router, prefix="/api/v1")

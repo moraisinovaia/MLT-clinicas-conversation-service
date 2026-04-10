@@ -3,6 +3,7 @@ Gerenciamento de sessão — load/save de ia_contexto_sessao.
 
 Sliding window de ultimos_turnos: máximo 6 turnos.
 """
+# resolve_rag_ids também exportado daqui — precisa de asyncpg (I/O)
 from __future__ import annotations
 import json
 import logging
@@ -213,3 +214,57 @@ async def save_session(
         ctx.fila_id,
         ctx.nome_paciente,
     )
+
+
+# ── Resolução de IDs para filtros RAG ────────────────────────────────────────
+
+async def resolve_rag_ids(
+    medico_nome:      str | None,
+    atendimento_nome: str | None,
+    cliente_id:       str,
+    db:               asyncpg.Connection,
+) -> tuple[str | None, str | None]:
+    """
+    Resolve medico_nome → doctor_id e atendimento_nome → procedure_id
+    para uso como filtros fortes no hybrid_search_v2.
+
+    Retorna (doctor_id, procedure_id) — None quando não encontrado.
+    Nunca lança exceção: falha silenciosa mantém busca sem filtro.
+    """
+    doctor_id    = None
+    procedure_id = None
+
+    try:
+        if medico_nome:
+            row = await db.fetchrow(
+                """
+                SELECT id FROM medicos
+                WHERE cliente_id = $1
+                  AND nome ILIKE $2
+                LIMIT 1
+                """,
+                cliente_id,
+                f"%{medico_nome}%",
+            )
+            if row and row["id"]:
+                doctor_id = str(row["id"])
+
+        if atendimento_nome:
+            row = await db.fetchrow(
+                """
+                SELECT id FROM procedimentos_clinica
+                WHERE cliente_id = $1
+                  AND (nome ILIKE $2 OR $3 = ANY(aliases))
+                  AND disponivel = true
+                LIMIT 1
+                """,
+                cliente_id,
+                f"%{atendimento_nome}%",
+                atendimento_nome.lower(),
+            )
+            if row and row["id"]:
+                procedure_id = str(row["id"])
+    except Exception as e:
+        logger.warning("resolve_rag_ids_failed cliente=%s err=%s", cliente_id, e)
+
+    return doctor_id, procedure_id

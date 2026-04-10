@@ -26,6 +26,7 @@ def make_parsed(intent: IntentType, **entities) -> ParsedIntent:
         entities=EntitySet(**entities),
         risk_level="low",
         needs_clarification=False,
+        mensagem_usuario="",
     )
 
 
@@ -47,6 +48,8 @@ def make_gt(result) -> MagicMock:
     gt.adicionar_fila   = AsyncMock(return_value=result)
     gt.responder_fila   = AsyncMock(return_value=result)
     gt.get_availability = AsyncMock(return_value=result)
+    gt.list_doctors     = AsyncMock(return_value=result)
+    gt.doctor_schedules = AsyncMock(return_value=result)
     gt.list_appointments = AsyncMock(return_value=result)
     gt.check_patient    = AsyncMock(return_value=result)
     return gt
@@ -61,7 +64,7 @@ async def test_transbordo_retorna_estado_transbordo():
         parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), None
     )
     assert next_state == ConversationState.TRANSBORDO.value
-    assert msgs
+    assert msgs == []  # mensagem composta pelo conversation.py, não pelo workflow
 
 
 # ── AGENDAR — coleta progressiva ──────────────────────────────────────────────
@@ -209,6 +212,208 @@ async def test_agendar_convenio_nao_aceito():
     )
     assert next_state == ConversationState.TRIAGEM.value
     assert "convênio" in msgs[0].text.lower()
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_convenio_consulta_gt_inova():
+    gt = make_gt(
+        GTInovaOk(data={
+            "medicos": [{
+                "nome": "Dr. Hermann Madeiro",
+                "convenios_aceitos": ["PARTICULAR", "HGU"],
+                "servicos": [],
+            }]
+        })
+    )
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+        convenio="HGU",
+    )
+    parsed.mensagem_usuario = "Dr. Hermann atende HGU?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), gt
+    )
+
+    gt.doctor_schedules.assert_awaited_once()
+    assert next_state is None
+    assert "gt inova" in msgs[0].text.lower()
+    assert "hgu" in msgs[0].text.lower()
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_servico_ativo_consulta_gt_inova():
+    gt = make_gt(
+        GTInovaOk(data={
+            "medicos": [{
+                "nome": "Dr. Hermann Madeiro",
+                "convenios_aceitos": ["PARTICULAR"],
+                "servicos": [
+                    {"nome": "Gonioscopia", "dias": "Quinta", "periodos": []},
+                ],
+            }]
+        })
+    )
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+        atendimento_nome="Gonioscopia",
+    )
+    parsed.mensagem_usuario = "Dr. Hermann faz gonioscopia?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), gt
+    )
+
+    gt.doctor_schedules.assert_awaited_once()
+    assert next_state is None
+    assert "realiza gonioscopia" in msgs[0].text.lower()
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_lista_convenios_por_medico_consulta_gt_inova():
+    gt = make_gt(
+        GTInovaOk(data={
+            "medicos": [{
+                "nome": "Dr. Hermann Madeiro",
+                "convenios_aceitos": ["PARTICULAR", "HGU", "CASSI"],
+                "servicos": [],
+            }]
+        })
+    )
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+    )
+    parsed.mensagem_usuario = "Quais convenios o Dr. Hermann atende?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), gt
+    )
+
+    gt.doctor_schedules.assert_awaited_once()
+    assert next_state is None
+    assert "segundo a gt inova agora" in msgs[0].text.lower()
+    assert "cassi" in msgs[0].text.lower()
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_lista_servicos_por_medico_consulta_gt_inova():
+    gt = make_gt(
+        GTInovaOk(data={
+            "medicos": [{
+                "nome": "Dr. Hermann Madeiro",
+                "convenios_aceitos": ["PARTICULAR"],
+                "servicos": [
+                    {"nome": "Gonioscopia", "dias": "Quinta", "periodos": []},
+                    {"nome": "Mapeamento de Retina", "dias": "Sexta", "periodos": []},
+                ],
+            }]
+        })
+    )
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+    )
+    parsed.mensagem_usuario = "Quais procedimentos o Dr. Hermann faz?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), gt
+    )
+
+    gt.doctor_schedules.assert_awaited_once()
+    assert next_state is None
+    assert "servicos ativos" in msgs[0].text.lower()
+    assert "gonioscopia" in msgs[0].text.lower()
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_disponibilidade_consulta_gt_inova():
+    gt = make_gt(
+        GTInovaOk(data={"message": "Dr. Hermann tem vagas na quinta-feira."})
+    )
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+        atendimento_nome="Consulta oftalmologica",
+    )
+    parsed.mensagem_usuario = "Tem vaga do Dr. Hermann para consulta?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), gt
+    )
+
+    gt.get_availability.assert_awaited_once()
+    assert next_state is None
+    assert "vagas" in msgs[0].text.lower()
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_vaga_sem_atendimento_pede_clarificacao():
+    gt = make_gt(GTInovaOk(data={"message": "nao deveria chamar"}))
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+    )
+    parsed.mensagem_usuario = "Dr. Hermann tem vaga?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), gt
+    )
+
+    gt.get_availability.assert_not_awaited()
+    gt.doctor_schedules.assert_not_awaited()
+    assert next_state == ConversationState.COLETANDO_DADOS.value
+    assert "qual atendimento" in msgs[0].text.lower()
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_limite_convenio_responde_sem_inventar_numero():
+    gt = make_gt(
+        GTInovaOk(data={
+            "medicos": [{
+                "nome": "Dr. Hermann Madeiro",
+                "convenios_aceitos": ["PARTICULAR", "HGU"],
+                "servicos": [],
+            }]
+        })
+    )
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+        convenio="HGU",
+    )
+    parsed.mensagem_usuario = "Qual o limite de pacientes HGU por turno do Dr. Hermann?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", make_db(), gt
+    )
+
+    gt.doctor_schedules.assert_awaited_once()
+    assert next_state is None
+    assert "gt inova" in msgs[0].text.lower()
+    assert "validado" in msgs[0].text.lower()
+    assert "18" not in msgs[0].text
+
+
+@pytest.mark.asyncio
+async def test_duvida_operacional_sem_gt_inova_fecha_log_como_failed():
+    db = make_db()
+    parsed = make_parsed(
+        IntentType.DUVIDA,
+        medico_nome="Dr. Hermann",
+        convenio="HGU",
+    )
+    parsed.mensagem_usuario = "Dr. Hermann atende HGU?"
+
+    msgs, next_state = await execute_workflow(
+        parsed, ConversationState.TRIAGEM, [], "cli-1", "sess-1", db, None
+    )
+
+    assert next_state is None
+    assert "gt inova" in msgs[0].text.lower()
+    assert db.execute.await_count == 2
 
 
 # ── CANCELAR ──────────────────────────────────────────────────────────────────

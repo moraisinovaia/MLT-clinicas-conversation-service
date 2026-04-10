@@ -30,3 +30,4 @@ class ConversationResponse(BaseModel):
     session_id:   str
     cliente_id:   str
     trace_id:     str
+    feedback_id:  str | None = None   # UUID da linha em knowledge_feedback (somente rotas RAG)
