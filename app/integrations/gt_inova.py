@@ -75,8 +75,8 @@ class GTInovaClient:
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url.rstrip("/")
         self.headers  = {
-            "x-api-key":    api_key,
-            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type":  "application/json",
         }
 
     # ── Helper de requisição ──────────────────────────────────────────────────
@@ -105,14 +105,7 @@ class GTInovaClient:
                 _cb_record_success()
 
                 if resp.status_code >= 400:
-                    try:
-                        body = resp.json()
-                    except Exception:
-                        body = {}
-                    logger.error(
-                        "gt_inova_error path=%s status=%s body=%s payload=%s",
-                        path, resp.status_code, body, payload,
-                    )
+                    body = resp.json()
                     return GTInovaError(
                         error_code=body.get("error_code", "API_ERROR"),
                         message=body.get("message", "Erro no sistema de agendamento."),
@@ -154,6 +147,21 @@ class GTInovaClient:
             "periodo":          periodo,
         })
 
+    async def list_doctors(self, cliente_id: str) -> GTInovaResult:
+        return await self._request("POST", "/list-doctors", {
+            "cliente_id": cliente_id,
+        })
+
+    async def doctor_schedules(
+        self,
+        cliente_id: str,
+        medico_nome: str | None = None,
+    ) -> GTInovaResult:
+        payload: dict[str, str] = {"cliente_id": cliente_id}
+        if medico_nome:
+            payload["medico_nome"] = medico_nome
+        return await self._request("POST", "/doctor-schedules", payload)
+
     async def schedule(
         self,
         medico_nome:      str,
@@ -165,23 +173,15 @@ class GTInovaClient:
         paciente_celular: str | None = None,
         data_nascimento:  str | None = None,
         periodo:          str | None = None,
-        hora_consulta:    str | None = None,
     ) -> GTInovaResult:
-        # hora_consulta: usa a fornecida, ou deriva do período, ou padrão manhã
-        _hora = hora_consulta or (
-            "09:00" if (periodo or "").lower().startswith("manh")
-            else "14:00" if (periodo or "").lower().startswith("tard")
-            else "09:00"
-        )
         return await self._request("POST", "/schedule", {
             "medico_nome":      medico_nome,
             "atendimento_nome": atendimento_nome,
-            "data_consulta":    data_preferida,
-            "hora_consulta":    _hora,
+            "data_preferida":   data_preferida,
             "convenio":         convenio,
             "cliente_id":       cliente_id,
             "paciente_nome":    paciente_nome,
-            "celular":          paciente_celular,
+            "paciente_celular": paciente_celular,
             "data_nascimento":  data_nascimento,
             "periodo":          periodo,
         })
