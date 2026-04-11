@@ -498,34 +498,29 @@ async def _log_workflow_run(
     payload:        dict | None,
     error_code:     str | None,
 ) -> None:
+    # Mapear status interno para valores aceitos pelo CHECK constraint
+    _status_map = {"waiting_confirm": "waiting", "running": "running", "completed": "completed", "failed": "failed"}
+    db_status = _status_map.get(status, "running")
     try:
         await db.execute(
             """
             INSERT INTO workflow_runs (
                 id, session_id, cliente_id,
-                intent, current_step, status,
-                agendamento_id, payload, error_code,
-                created_at, updated_at
+                workflow_key, provider, status,
+                owner_atual, current_step, input_data, last_error,
+                started_at, updated_at
             ) VALUES (
                 $1, $2, $3,
-                $4, $5, $6,
-                $7, $8::jsonb, $9,
+                $4, 'internal', $5,
+                'ia', $6, $7::jsonb, $8,
                 NOW(), NOW()
             )
-            ON CONFLICT (session_id, cliente_id)
-            DO UPDATE SET
-                current_step   = EXCLUDED.current_step,
-                status         = EXCLUDED.status,
-                agendamento_id = COALESCE(EXCLUDED.agendamento_id, workflow_runs.agendamento_id),
-                payload        = EXCLUDED.payload,
-                error_code     = EXCLUDED.error_code,
-                updated_at     = NOW()
             """,
             str(uuid.uuid4()),
             session_id, cliente_id,
-            intent, step, status,
-            agendamento_id,
-            json.dumps(payload or {}, ensure_ascii=False),
+            intent, db_status,
+            step,
+            json.dumps({"intent": intent, "agendamento_id": agendamento_id, **(payload or {})}, ensure_ascii=False),
             error_code,
         )
     except Exception as e:
