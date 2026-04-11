@@ -19,7 +19,7 @@ class IntentType(str, Enum):
     DUVIDA_ORIENTACAO       = "duvida_orientacao"
     DUVIDA_POS_PROCEDIMENTO = "duvida_pos_procedimento"
 
-    # Informacional geral — rota sql | hybrid | clarify
+    # Informacional geral — rota sql | rag | workflow | clarify
     DUVIDA               = "duvida"
 
     # Conversacionais — rota direct

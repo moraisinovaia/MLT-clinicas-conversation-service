@@ -152,7 +152,7 @@ async def conversation(req: ConversationRequest, request: Request):
 
             # ── 8b. Resolve IDs para filtros RAG (doctor_id, procedure_id) ─
             # Só executa quando a rota usa RAG — evita query desnecessária.
-            if decision.route in ("rag", "hybrid") and decision.filters is not None:
+            if decision.route == "rag" and decision.filters is not None:
                 doctor_id, procedure_id = await resolve_rag_ids(
                     medico_nome      = parsed.entities.medico_nome,
                     atendimento_nome = parsed.entities.atendimento_nome,
@@ -187,14 +187,6 @@ async def conversation(req: ConversationRequest, request: Request):
 
             elif decision.route == "sql":
                 messages = await sql_route.execute_sql(parsed, req.cliente_id, db)
-
-            elif decision.route == "hybrid":
-                sql_msgs = await sql_route.execute_sql(parsed, req.cliente_id, db)
-                rag_msgs, feedback_id = await rag.execute_rag(
-                    parsed, decision.filters, req.cliente_id, db,
-                    session_id=req.session_id, query=req.message,
-                )
-                messages = sql_msgs + rag_msgs
 
             elif decision.route == "workflow":
                 gt_inova = getattr(request.app.state, "gt_inova", None)
