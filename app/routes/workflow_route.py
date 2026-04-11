@@ -464,6 +464,17 @@ async def _handle_operational_live_question(
             text=f"Consultei a GT Inova agora e nao encontrei {entities.atendimento_nome} como servico ativo."
         )], None)
 
+    # Sem filtro de convênio ou atendimento → lista todos os médicos disponíveis
+    if medicos:
+        nomes = ", ".join(m.get("nome") for m in medicos[:10] if m.get("nome"))
+        await _finalize_operational_query_log(
+            db, session_id, cliente_id, "completed",
+            payload={"source": "list_doctors", "detail": "all_doctors"},
+        )
+        return ([OutboundMessage(
+            text=f"Os medicos disponiveis sao: {nomes}. Quer saber mais sobre algum deles ou verificar disponibilidade?"
+        )], None)
+
     await _finalize_operational_query_log(
         db, session_id, cliente_id, "failed",
         payload={"source": "workflow", "detail": "insufficient_entities"},
