@@ -152,7 +152,7 @@ def _format_doctor_schedule_summary(doctor: dict) -> str:
     servicos = doctor.get("servicos") or []
     if not servicos:
         return (
-            f"Consultei a GT Inova agora, mas nao encontrei a grade operacional de {nome}. "
+            f"Consultei a GT Inova agora, mas não encontrei a grade operacional de {nome}. "
             "Posso verificar disponibilidade se voce me disser o atendimento desejado."
         )
 
@@ -162,7 +162,7 @@ def _format_doctor_schedule_summary(doctor: dict) -> str:
             lines.append(servico)
             continue
         nome_servico = servico.get("nome") or "Atendimento"
-        dias = servico.get("dias") or "dias nao informados"
+        dias = servico.get("dias") or "dias não informados"
         periodos = servico.get("periodos") or []
         if periodos:
             resumo_periodos = []
@@ -184,8 +184,8 @@ def _format_doctor_convenios_summary(doctor: dict) -> str:
     convenios = doctor.get("convenios_aceitos") or []
     if not convenios:
         return (
-            f"Consultei a GT Inova agora, mas nao encontrei convenios ativos para {nome}. "
-            "Se quiser, posso verificar outro medico."
+            f"Consultei a GT Inova agora, mas não encontrei convênios ativos para {nome}. "
+            "Se quiser, posso verificar outro médico."
         )
     lista = ", ".join(str(item) for item in convenios[:12])
     return f"Segundo a GT Inova agora, {nome} atende pelos seguintes convenios: {lista}."
@@ -202,11 +202,11 @@ def _format_doctor_services_summary(doctor: dict) -> str:
             nomes.append(str(item["nome"]))
     if not nomes:
         return (
-            f"Consultei a GT Inova agora, mas nao encontrei servicos ativos para {nome}. "
-            "Se quiser, posso verificar outro medico."
+            f"Consultei a GT Inova agora, mas não encontrei serviços ativos para {nome}. "
+            "Se quiser, posso verificar outro médico."
         )
     lista = ", ".join(nomes[:12])
-    return f"Segundo a GT Inova agora, {nome} aparece com estes servicos ativos: {lista}."
+    return f"Segundo a GT Inova agora, {nome} aparece com estes serviços ativos: {lista}."
 
 
 def _message_asks_for_limit(message_norm: str) -> bool:
@@ -276,7 +276,7 @@ async def _handle_operational_live_question(
         )
         return (
             [OutboundMessage(
-                text="Preciso consultar a agenda da GT Inova para confirmar essa informacao operacional. Tente novamente em instantes."
+                text="Preciso consultar a agenda da GT Inova para confirmar essa informação operacional. Tente novamente em instantes."
             )],
             None,
         )
@@ -338,7 +338,7 @@ async def _handle_operational_live_question(
                 error_code="DOCTOR_NOT_FOUND",
             )
             return ([OutboundMessage(
-                text="Consultei a GT Inova agora, mas nao encontrei esse medico na agenda ativa. Posso verificar outro nome para voce?"
+                text="Consultei a GT Inova agora, mas não encontrei esse médico na agenda ativa. Posso verificar outro nome para voce?"
             )], None)
 
         convenio = entities.convenio_canonico or entities.convenio
@@ -349,7 +349,7 @@ async def _handle_operational_live_question(
                     payload={"source": "doctor_schedules", "detail": "convenio_limit_requires_transaction"},
                 )
                 return ([OutboundMessage(
-                    text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} aparece com o convenio {convenio} ativo. O limite desse convenio por turno e validado na propria GT Inova no momento da disponibilidade ou do agendamento."
+                    text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} aparece com o convênio {convenio} ativo. O limite desse convênio por turno e validado na propria GT Inova no momento da disponibilidade ou do agendamento."
                 )], None)
 
             accepts = _doctor_accepts_convenio(doctor, convenio)
@@ -359,14 +359,14 @@ async def _handle_operational_live_question(
                     payload={"source": "doctor_schedules", "detail": "convenio_yes"},
                 )
                 return ([OutboundMessage(
-                    text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} atende pelo convenio {convenio}. Se quiser, posso verificar a disponibilidade."
+                    text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} atende pelo convênio {convenio}. Se quiser, posso verificar a disponibilidade."
                 )], None)
             await _finalize_operational_query_log(
                 db, session_id, cliente_id, "completed",
                 payload={"source": "doctor_schedules", "detail": "convenio_no"},
             )
             return ([OutboundMessage(
-                text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} nao aparece atendendo pelo convenio {convenio}. Posso verificar outro medico ou convenio para voce?"
+                text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} não aparece atendendo pelo convênio {convenio}. Posso verificar outro médico ou convênio para voce?"
             )], None)
 
         if any(keyword in message_norm for keyword in convenio_keywords):
@@ -391,7 +391,7 @@ async def _handle_operational_live_question(
                 payload={"source": "doctor_schedules", "detail": "service_no"},
             )
             return ([OutboundMessage(
-                text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} nao aparece com {entities.atendimento_nome} ativo na agenda. Posso verificar outro medico ou atendimento para voce?"
+                text=f"Segundo a GT Inova agora, {doctor.get('nome') or entities.medico_nome} não aparece com {entities.atendimento_nome} ativo na agenda. Posso verificar outro médico ou atendimento para voce?"
             )], None)
 
         if any(keyword in message_norm for keyword in service_keywords):
@@ -431,14 +431,14 @@ async def _handle_operational_live_question(
                 payload={"source": "list_doctors", "detail": "convenio_global_list"},
             )
             return ([OutboundMessage(
-                text=f"Segundo a GT Inova agora, o convenio {convenio} aparece ativo para: {nomes}."
+                text=f"Segundo a GT Inova agora, o convênio {convenio} aparece ativo para: {nomes}."
             )], None)
         await _finalize_operational_query_log(
             db, session_id, cliente_id, "completed",
             payload={"source": "list_doctors", "detail": "convenio_global_empty"},
         )
         return ([OutboundMessage(
-            text=f"Consultei a GT Inova agora e nao encontrei medicos com o convenio {convenio} ativo."
+            text=f"Consultei a GT Inova agora e não encontrei médicos com o convênio {convenio} ativo."
         )], None)
 
     if entities.atendimento_nome:
@@ -461,7 +461,7 @@ async def _handle_operational_live_question(
             payload={"source": "list_doctors", "detail": "service_global_empty"},
         )
         return ([OutboundMessage(
-            text=f"Consultei a GT Inova agora e nao encontrei {entities.atendimento_nome} como servico ativo."
+            text=f"Consultei a GT Inova agora e não encontrei {entities.atendimento_nome} como serviço ativo."
         )], None)
 
     # Sem filtro de convênio ou atendimento → lista todos os médicos disponíveis
@@ -472,7 +472,7 @@ async def _handle_operational_live_question(
             payload={"source": "list_doctors", "detail": "all_doctors"},
         )
         return ([OutboundMessage(
-            text=f"Os medicos disponiveis sao: {nomes}. Quer saber mais sobre algum deles ou verificar disponibilidade?"
+            text=f"Os médicos disponíveis são: {nomes}. Quer saber mais sobre algum deles ou verificar disponibilidade?"
         )], None)
 
     await _finalize_operational_query_log(
@@ -481,7 +481,7 @@ async def _handle_operational_live_question(
         error_code="INSUFFICIENT_ENTITIES",
     )
     return ([OutboundMessage(
-        text="Para confirmar essa informacao operacional, preciso do medico, convenio ou atendimento que voce quer consultar."
+        text="Para confirmar essa informação operacional, preciso do médico, convenio ou atendimento que voce quer consultar."
     )], None)
 
 
@@ -708,8 +708,8 @@ async def _evaluate_atendimento_medico(
         return CombinationDecision(
             action="deny",
             message=row["mensagem_bloqueio"] or (
-                "O medico solicitado nao realiza esse atendimento. "
-                "Posso verificar outro medico ou atendimento para voce?"
+                "O médico solicitado não realiza esse atendimento. "
+                "Posso verificar outro médico ou atendimento para voce?"
             ),
             decision_source="atendimento_medico",
             rule_table="atendimentos_medico",
@@ -786,7 +786,7 @@ async def _evaluate_convenio_atendimento_medico(
         return CombinationDecision(
             action="deny",
             message=row["mensagem_bloqueio"] or (
-                f"O convenio {convenio} nao permite esse atendimento com o medico solicitado. "
+                f"O convênio {convenio} não permite esse atendimento com o médico solicitado. "
                 "Posso verificar outra opcao para voce?"
             ),
             decision_source="convenio_atendimento_medico",
@@ -828,9 +828,9 @@ async def _precheck_gt_inova(
     os dados locais eram informativos e podiam divergir.
 
     Comportamento:
-    - GT Inova indisponivel → retorna action='none' (nao bloqueia, deixa /schedule decidir)
+    - GT Inova indisponivel → retorna action='none' (não bloqueia, deixa /schedule decidir)
     - Medico nao encontrado na agenda → deny com mensagem de confirmação de nome
-    - Convenio nao aceito → deny com lista dos convenios aceitos
+    - Convenio nao aceito → deny com lista dos convênios aceitos
     - Servico nao ativo → deny com lista dos servicos disponíveis
     - Tudo ok → action='allow'
     """
@@ -841,14 +841,14 @@ async def _precheck_gt_inova(
 
     schedules = await gt_inova.doctor_schedules(cliente_id, entities.medico_nome)
     if isinstance(schedules, GTInovaError):
-        # GT Inova indisponivel: nao bloquear — /availability e /schedule decidem
+        # GT Inova indisponivel: não bloquear — /availability e /schedule decidem
         return CombinationDecision()
 
     doctor = _extract_schedule_doctor(schedules.data, entities.medico_nome)
     if not doctor:
         return CombinationDecision(
             action="deny",
-            message=f"Nao encontrei {entities.medico_nome} na agenda ativa. Pode confirmar o nome do medico?",
+            message=f"Não encontrei {entities.medico_nome} na agenda ativa. Pode confirmar o nome do médico?",
             decision_source="gt_inova_precheck",
             rule_table="doctor_schedules",
         )
@@ -860,8 +860,8 @@ async def _precheck_gt_inova(
         return CombinationDecision(
             action="deny",
             message=(
-                f"{doctor.get('nome') or entities.medico_nome} nao atende pelo convenio {convenio}. "
-                f"Convenios aceitos: {lista}. Posso verificar outro convenio ou medico?"
+                f"{doctor.get('nome') or entities.medico_nome} não atende pelo convênio {convenio}. "
+                f"Convenios aceitos: {lista}. Posso verificar outro convênio ou medico?"
             ),
             decision_source="gt_inova_precheck",
             rule_table="doctor_schedules",
@@ -878,7 +878,7 @@ async def _precheck_gt_inova(
         return CombinationDecision(
             action="deny",
             message=(
-                f"{doctor.get('nome') or entities.medico_nome} nao aparece com "
+                f"{doctor.get('nome') or entities.medico_nome} não aparece com "
                 f"{entities.atendimento_nome} ativo na agenda. "
                 f"Atendimentos disponíveis: {lista}. Posso verificar outra opcao?"
             ),
@@ -946,7 +946,7 @@ async def _handle_agendar(
 
     # Dados completos → validar em ordem:
     #   1. convenio x atendimento x medico  (regra tripla local — o que a API nao sabe)
-    #   2. GT Inova precheck via doctor_schedules  (convenio + servico ativos)
+    #   2. GT Inova precheck via doctor_schedules  (convenio + serviço ativos)
     #   3. /availability → /schedule
     if estado_atual in (ConversationState.COLETANDO_DADOS, ConversationState.TRIAGEM):
         decision_tripla = await _evaluate_convenio_atendimento_medico(entities, cliente_id, db)
