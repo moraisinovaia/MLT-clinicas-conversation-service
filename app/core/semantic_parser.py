@@ -63,6 +63,12 @@ explicativas, de preparo, perfil biográfico ou orientação clínica.
 IMPORTANTE: Extraia entidades SOMENTE do conteúdo da mensagem atual.
 NÃO herde entidades de mensagens anteriores no contexto.
 Se a mensagem não mencionar médico, atendimento ou convênio, deixe null.
+
+Regras de intent para perguntas sobre exames:
+- "como é feito", "o que é", "como funciona", "precisa de preparo", "dilata" → duvida_preparo (NOT duvida)
+- "quem faz", "qual médico faz", "vocês fazem" → duvida com is_operational_query=true
+- "quero marcar", "agendar" → agendar
+Quando o paciente pergunta COMO é um exame, NÃO extraia atendimento_nome — é uma dúvida clínica, não uma intenção de agendar.
 """
 
 
