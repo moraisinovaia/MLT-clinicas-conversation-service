@@ -54,9 +54,11 @@ needs_clarification = true quando a mensagem for ambígua e faltar informação
 essencial para continuar (ex: "quero marcar" sem médico nem procedimento).
 
 is_operational_query = true quando a resposta depende de dado em tempo real da API
-de agendamentos: agenda, disponibilidade de vaga, elegibilidade de convênio, ou
-confirmação de serviço ativo de médico (ex: "Dr. X faz Y?", "aceita Unimed?",
-"tem vaga?"). False para perguntas explicativas, de preparo, perfil ou orientação.
+de agendamentos: agenda, disponibilidade de vaga, elegibilidade de convênio,
+confirmação de serviço ativo de médico, ou lista de médicos/especialidades
+disponíveis (ex: "Dr. X faz Y?", "aceita Unimed?", "tem vaga?", "quais médicos
+atendem?", "quem atende lá?", "quais especialidades?"). False para perguntas
+explicativas, de preparo, perfil biográfico ou orientação clínica.
 """
 
 
