@@ -77,6 +77,10 @@ async def conversation(req: ConversationRequest, request: Request):
         feedback_id: str | None = None
         novo_estado  = ConversationState.TRIAGEM   # fallback seguro
 
+        # Normalizar mensagem — remove aspas externas que o N8N pode adicionar
+        # ao serializar o campo como string JSON (ex: '"texto"' → 'texto')
+        req = req.model_copy(update={"message": req.message.strip('"\'')})
+
         try:
             # ── 2a. Configuração da clínica (transbordo, fallback) ────────
             clinica_cfg = await db.fetchrow(
