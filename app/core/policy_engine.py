@@ -109,7 +109,24 @@ def decide_route(
             ),
         )
 
-    # Regra 5b: dúvida factual simples e não operacional → sql
+    # Regra 5b: dúvida sobre localização, endereço, horário → RAG (está nos documentos)
+    _location_keywords = ("endereço", "endereco", "localização", "localizacao",
+                          "onde fica", "como chegar", "horário", "horario",
+                          "funcionamento", "abre", "fecha", "aberto")
+    if (
+        intent.intent == IntentType.DUVIDA
+        and any(kw in intent.mensagem_usuario.lower() for kw in _location_keywords)
+    ):
+        return RouteDecision(
+            route="rag",
+            reason="localização/horário — busca nos documentos da clínica",
+            filters=RagFilters(
+                risk_max="low",
+                source_types=["policy", "facility_info", "operational_script"],
+            ),
+        )
+
+    # Regra 5c: dúvida factual simples e não operacional → sql
     # Convenio nunca chega aqui (Regra 4/4b garante). Só medico_nome sem convenio.
     if intent.intent == IntentType.DUVIDA and intent.entities.is_factual_only():
         return RouteDecision(route="sql", reason="fato estruturado — SQL local")
