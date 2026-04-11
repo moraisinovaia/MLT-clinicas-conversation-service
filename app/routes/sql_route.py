@@ -47,10 +47,10 @@ async def execute_sql(
             return [OutboundMessage(text="\n".join(parts))]
         return [OutboundMessage(text=_NO_INFO)]
 
-    # ── Endereço / contato da clínica ─────────────────────────────────────────
+    # ── Endereço / contato / horário da clínica ───────────────────────────────
     row = await db.fetchrow(
         """
-        SELECT nome_clinica, telefone_publico
+        SELECT nome_clinica, telefone_publico, endereco, horario_funcionamento
         FROM configuracoes_clinica
         WHERE id = $1
         LIMIT 1
@@ -61,8 +61,12 @@ async def execute_sql(
         parts = []
         if row["nome_clinica"]:
             parts.append(row["nome_clinica"])
+        if row["endereco"]:
+            parts.append(f"Endereço: {row['endereco']}")
         if row["telefone_publico"]:
             parts.append(f"Telefone: {row['telefone_publico']}")
+        if row["horario_funcionamento"]:
+            parts.append(f"Horário: {row['horario_funcionamento']}")
         return [OutboundMessage(text="\n".join(parts))]
 
     return [OutboundMessage(text=_NO_INFO)]

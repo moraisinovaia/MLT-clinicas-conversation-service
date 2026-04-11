@@ -109,22 +109,18 @@ def decide_route(
             ),
         )
 
-    # Regra 5b: dúvida sobre localização, endereço, horário → RAG (está nos documentos)
+    # Regra 5b: dúvida sobre localização, endereço, horário → SQL
+    # configuracoes_clinica tem colunas endereco e horario_funcionamento
     _location_keywords = ("endereço", "endereco", "localização", "localizacao",
                           "onde fica", "como chegar", "horário", "horario",
-                          "funcionamento", "abre", "fecha", "aberto")
+                          "funcionamento", "abre", "fecha", "aberto", "telefone",
+                          "contato", "número", "numero")
     if (
         intent.intent == IntentType.DUVIDA
         and any(kw in intent.mensagem_usuario.lower() for kw in _location_keywords)
+        and not intent.entities.medico_nome
     ):
-        return RouteDecision(
-            route="rag",
-            reason="localização/horário — busca nos documentos da clínica",
-            filters=RagFilters(
-                risk_max="low",
-                source_types=["policy", "facility_info", "operational_script"],
-            ),
-        )
+        return RouteDecision(route="sql", reason="localização/contato da clínica — SQL direto")
 
     # Regra 5c: dúvida factual simples e não operacional → sql
     # Convenio nunca chega aqui (Regra 4/4b garante). Só medico_nome sem convenio.

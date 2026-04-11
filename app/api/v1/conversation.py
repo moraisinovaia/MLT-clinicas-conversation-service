@@ -127,6 +127,9 @@ async def conversation(req: ConversationRequest, request: Request):
                         needs_clarification=True,
                     )
 
+            # Garante que policy_engine e rotas sempre têm acesso à mensagem original
+            parsed = parsed.model_copy(update={"mensagem_usuario": req.message})
+
             # ── 5. Alias lookup (convenio → convenio_canonico) ───────────
             parsed.entities = await canonicalize_entities(
                 parsed.entities, req.cliente_id, db
