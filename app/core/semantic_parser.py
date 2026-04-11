@@ -59,6 +59,10 @@ confirmação de serviço ativo de médico, ou lista de médicos/especialidades
 disponíveis (ex: "Dr. X faz Y?", "aceita Unimed?", "tem vaga?", "quais médicos
 atendem?", "quem atende lá?", "quais especialidades?"). False para perguntas
 explicativas, de preparo, perfil biográfico ou orientação clínica.
+
+IMPORTANTE: Extraia entidades SOMENTE do conteúdo da mensagem atual.
+NÃO herde entidades de mensagens anteriores no contexto.
+Se a mensagem não mencionar médico, atendimento ou convênio, deixe null.
 """
 
 
