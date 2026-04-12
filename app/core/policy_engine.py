@@ -111,7 +111,18 @@ def decide_route(
             reason="convênio detectado — elegibilidade via GT Inova",
         )
 
-    # Regra 4c: fallback de segurança operacional via keywords.
+    # Regra 4c: localização/contato da clínica → SQL ANTES do fallback operacional.
+    # Precede Regra 4d porque "horário" aparece tanto em "horário de funcionamento"
+    # (clínica → SQL) quanto em "horário disponível" (agenda → workflow).
+    # Verificar location keywords primeiro resolve essa ambiguidade corretamente.
+    if (
+        intent.intent == IntentType.DUVIDA
+        and any(kw in intent.mensagem_usuario.lower() for kw in _LOCATION_KEYWORDS)
+        and not intent.entities.medico_nome
+    ):
+        return RouteDecision(route="sql", reason="localização/contato da clínica — SQL direto")
+
+    # Regra 4d: fallback de segurança operacional via keywords.
     # Garante que perguntas operacionais que o LLM não sinalizou como is_operational_query
     # (ex: "tem vaga?", "aceita Unimed?") ainda vão para o workflow em vez do RAG.
     # EntitySet.touches_live_operational_context() usa listas curadas de keywords.
@@ -178,16 +189,7 @@ def decide_route(
             ),
         )
 
-    # Regra 8: dúvida sobre localização, endereço, telefone, horário → SQL
-    # configuracoes_clinica tem colunas endereco e horario_funcionamento.
-    if (
-        intent.intent == IntentType.DUVIDA
-        and any(kw in intent.mensagem_usuario.lower() for kw in _LOCATION_KEYWORDS)
-        and not intent.entities.medico_nome
-    ):
-        return RouteDecision(route="sql", reason="localização/contato da clínica — SQL direto")
-
-    # Regra 9: dúvida factual simples (médico sem procedimento) → SQL local.
+    # Regra 8: dúvida factual simples (médico sem procedimento) → SQL local.
     # Convênio nunca chega aqui (Regra 4/4b garantem). Só medico_nome sem atendimento_nome.
     if intent.intent == IntentType.DUVIDA and intent.entities.is_factual_only():
         return RouteDecision(route="sql", reason="fato estruturado — SQL local")

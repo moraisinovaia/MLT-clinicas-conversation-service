@@ -1,0 +1,467 @@
+{
+  "mode": "routing",
+  "ts": "20260412_232445",
+  "metrics": {
+    "total_cases": 44,
+    "route_accuracy_pct": 100.0,
+    "route_correct": 44,
+    "route_wrong": 0,
+    "route_wrong_cases": [],
+    "intent_accuracy_pct": null,
+    "intent_correct": 0,
+    "intent_tested": 0,
+    "intent_wrong_cases": [],
+    "risk_accuracy_pct": null,
+    "risk_correct": 0,
+    "risk_tested": 0,
+    "rag_cases_with_answer": 0,
+    "no_redirect_rate_pct": null,
+    "answer_kw_hit_rate_pct": null,
+    "answer_forbidden_ok_pct": null,
+    "chunk_recall_at_k_pct": null,
+    "chunk_recall_tested": 0,
+    "redirect_cases": []
+  },
+  "results": [
+    {
+      "id": "gt_prep_001",
+      "category": "duvida_preparo",
+      "query": "precisa dilatar para a consulta?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_002",
+      "category": "duvida_preparo",
+      "query": "o que é o exame de fundo de olho?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_003",
+      "category": "duvida_preparo",
+      "query": "como é o exame de OCT? precisa de preparo?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_004",
+      "category": "duvida_preparo",
+      "query": "vou ficar com a visão embaçada depois do exame?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_005",
+      "category": "duvida_preparo",
+      "query": "precisa de acompanhante para fazer o exame?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_006",
+      "category": "duvida_preparo",
+      "query": "minha filha tem 10 anos, vai dilatar na consulta?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_007",
+      "category": "duvida_preparo",
+      "query": "tenho diabetes, preciso de preparo especial para a consulta?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_008",
+      "category": "duvida_preparo",
+      "query": "o que é CTD e precisa de preparo?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_009",
+      "category": "duvida_preparo",
+      "query": "posso dirigir depois que dilatar?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_010",
+      "category": "duvida_preparo",
+      "query": "tenho 65 anos, vou precisar dilatar?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_011",
+      "category": "duvida_preparo",
+      "query": "como funciona a retinografia?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_prep_012",
+      "category": "duvida_preparo",
+      "query": "quais exames precisam de dilatação?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_ori_001",
+      "category": "duvida_orientacao",
+      "query": "quando fico sabendo o resultado do exame?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_ori_002",
+      "category": "duvida_orientacao",
+      "query": "preciso levar pedido médico para fazer o exame?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_ori_003",
+      "category": "duvida_orientacao",
+      "query": "como funciona o encaixe do Dr. Guilherme?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_ori_004",
+      "category": "duvida_orientacao",
+      "query": "qual o prazo de entrega dos exames do HOP?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_ori_005",
+      "category": "duvida_orientacao",
+      "query": "precisa de acompanhante para exame que dilata no HOP?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_pos_001",
+      "category": "duvida_pos_procedimento",
+      "query": "posso lavar o olho depois da cirurgia de catarata?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_pos_002",
+      "category": "duvida_pos_procedimento",
+      "query": "quando posso voltar a trabalhar depois da operação de catarata?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_pos_003",
+      "category": "duvida_pos_procedimento",
+      "query": "meu olho está vermelho dois dias após a cirurgia, é normal?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_proc_001",
+      "category": "duvida_generico_proc",
+      "query": "o que é mapeamento de retina?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_proc_002",
+      "category": "duvida_generico_proc",
+      "query": "como é a cirurgia de catarata?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_proc_003",
+      "category": "duvida_generico_proc",
+      "query": "o que acontece durante o exame de YAG Laser?",
+      "expected_route": "rag",
+      "actual_route": "rag",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_op_001",
+      "category": "workflow_operacional",
+      "query": "quais médicos atendem na clínica?",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_op_002",
+      "category": "workflow_operacional",
+      "query": "vocês aceitam Unimed?",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_op_003",
+      "category": "workflow_operacional",
+      "query": "tem vaga para essa semana?",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_op_004",
+      "category": "workflow_operacional",
+      "query": "o Dr. Hermann aceita CASSI?",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_op_005",
+      "category": "workflow_operacional",
+      "query": "vocês fazem cirurgia de pterigio?",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_op_006",
+      "category": "workflow_operacional",
+      "query": "quais especialidades atendem na clínica?",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_tr_001",
+      "category": "workflow_transacional",
+      "query": "quero marcar uma consulta com o Dr. Hermann",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_tr_002",
+      "category": "workflow_transacional",
+      "query": "preciso cancelar meu agendamento",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_tr_003",
+      "category": "workflow_transacional",
+      "query": "quero remarcar minha consulta de amanhã",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_wf_tr_004",
+      "category": "workflow_transacional",
+      "query": "quero entrar na fila de espera para o Dr. Guilherme",
+      "expected_route": "workflow",
+      "actual_route": "workflow",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_sql_001",
+      "category": "sql",
+      "query": "qual o endereço da clínica?",
+      "expected_route": "sql",
+      "actual_route": "sql",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_sql_002",
+      "category": "sql",
+      "query": "qual o telefone de contato?",
+      "expected_route": "sql",
+      "actual_route": "sql",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_sql_003",
+      "category": "sql",
+      "query": "qual o horário de funcionamento?",
+      "expected_route": "sql",
+      "actual_route": "sql",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_dir_001",
+      "category": "direct",
+      "query": "bom dia!",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_dir_002",
+      "category": "direct",
+      "query": "boa tarde, tudo bem?",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_dir_003",
+      "category": "direct",
+      "query": "muito obrigada pela ajuda!",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_dir_004",
+      "category": "direct",
+      "query": "até logo, obrigado!",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_dir_005",
+      "category": "direct",
+      "query": "quero informações sobre emprego na clínica",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_clr_001",
+      "category": "clarify",
+      "query": "quero marcar",
+      "expected_route": "clarify",
+      "actual_route": "clarify",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_clr_002",
+      "category": "clarify",
+      "query": "tenho uma dúvida",
+      "expected_route": "clarify",
+      "actual_route": "clarify",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    },
+    {
+      "id": "gt_clr_003",
+      "category": "clarify",
+      "query": "preciso de informações sobre o exame",
+      "expected_route": "clarify",
+      "actual_route": "clarify",
+      "route_ok": true,
+      "expected_chunk_ids": [],
+      "retrieved_chunk_ids": []
+    }
+  ]
+}
