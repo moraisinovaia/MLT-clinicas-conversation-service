@@ -127,11 +127,19 @@ def decide_route(
     # Regra 5: dúvidas explicativas clínicas com intent específico → rag com filtros de risco.
     # DEVE preceder qualquer verificação de atendimento_nome para garantir a rota correta.
     # Se o LLM classificou corretamente (duvida_preparo, duvida_orientacao, etc.), vai aqui.
+    #
+    # source_types escolhidos para cobrir o que existe na knowledge base da clínica:
+    #   duvida_preparo        → exam_prep (protocolos de dilatação, preparo de exames)
+    #   duvida_orientacao     → policy + procedure_info + operational_script
+    #                           (operational_script tem orientações de exames, prazo, acompanhante)
+    #   duvida_pos_procedimento → exam_prep + operational_script
+    #                           (post_procedure não tem chunks ainda; estes são os proxies mais
+    #                            próximos até que conteúdo pós-procedimento seja adicionado)
     if intent.intent in EXPLANATORY_INTENTS:
         source_map = {
-            IntentType.DUVIDA_PREPARO:          ["exam_prep", "medication_guide"],
-            IntentType.DUVIDA_ORIENTACAO:        ["policy", "procedure_info"],
-            IntentType.DUVIDA_POS_PROCEDIMENTO:  ["post_procedure", "medication_guide"],
+            IntentType.DUVIDA_PREPARO:          ["exam_prep"],
+            IntentType.DUVIDA_ORIENTACAO:        ["policy", "procedure_info", "operational_script"],
+            IntentType.DUVIDA_POS_PROCEDIMENTO:  ["exam_prep", "operational_script"],
         }
         return RouteDecision(
             route="rag",

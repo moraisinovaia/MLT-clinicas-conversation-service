@@ -64,11 +64,34 @@ IMPORTANTE: Extraia entidades SOMENTE do conteúdo da mensagem atual.
 NÃO herde entidades de mensagens anteriores no contexto.
 Se a mensagem não mencionar médico, atendimento ou convênio, deixe null.
 
-Regras de intent para perguntas sobre exames:
-- "como é feito", "o que é", "como funciona", "precisa de preparo", "dilata" → duvida_preparo (NOT duvida)
-- "quem faz", "qual médico faz", "vocês fazem" → duvida com is_operational_query=true
-- "quero marcar", "agendar" → agendar
-Quando o paciente pergunta COMO é um exame, NÃO extraia atendimento_nome — é uma dúvida clínica, não uma intenção de agendar.
+Regras de classificação de intents informativos:
+
+duvida_preparo → pergunta sobre COMO se preparar, o que esperar, se vai dilatar, se precisa de jejum,
+  se pode dirigir depois, o que é o exame, como funciona, quanto tempo dura, precisa de acompanhante.
+  Exemplos: "precisa dilatar?", "o que é fundo de olho?", "como é a OCT?", "tem preparo?",
+  "vou ficar com a visão embaçada?", "precisa de acompanhante?", "quanto tempo demora?",
+  "como funciona a retinografia?", "o que acontece durante o exame?"
+  risk_level: high se envolver dilatação, medicação ou jejum; low para dúvidas descritivas gerais.
+
+duvida_orientacao → pergunta sobre REGRAS, POLÍTICAS ou ORIENTAÇÕES da clínica.
+  Exemplos: "quando fico sabendo do resultado?", "qual o prazo de entrega do exame?",
+  "como funciona o encaixe?", "preciso levar pedido médico?", "o que levar na consulta?",
+  "posso levar criança junto?", "precisa de solicitação?", "como funciona o agendamento?"
+  risk_level: medium.
+
+duvida_pos_procedimento → pergunta sobre cuidados APÓS cirurgia ou procedimento já realizado.
+  Exemplos: "posso lavar o olho?", "quando posso dirigir após a cirurgia?",
+  "quanto tempo de repouso?", "colírio pós-operatório", "olho ainda está vermelho após a cirurgia",
+  "o que fazer depois da operação de catarata?"
+  risk_level: high.
+
+duvida com is_operational_query=true → "quem faz", "qual médico faz", "vocês fazem", "tem esse exame",
+  "quais médicos atendem", "quais especialidades", "tem vaga", "qual horário disponível", "aceita X convênio"
+
+agendar → "quero marcar", "quero agendar", "preciso de uma consulta"
+
+Quando o paciente pergunta COMO é um exame ou QUAL O PREPARO, NÃO extraia atendimento_nome.
+É uma dúvida clínica (duvida_preparo), não intenção de agendar.
 """
 
 
