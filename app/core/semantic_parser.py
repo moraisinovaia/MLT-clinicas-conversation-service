@@ -101,6 +101,21 @@ duvida com is_operational_query=false → perguntas sobre horário de FUNCIONAME
 agendar → "quero marcar", "quero agendar", "preciso de uma consulta".
   needs_clarification = false mesmo sem médico ou data especificados.
 
+fila → "quero entrar na fila", "quero a fila de espera", "lista de espera", "entrar na fila do Dr. X",
+  "quero aguardar uma vaga", "me coloca na fila". SEMPRE classifique como fila, nunca como duvida.
+  needs_clarification = false.
+
+cancelar → "preciso cancelar", "quero cancelar minha consulta", "cancela meu horário".
+  needs_clarification = false.
+
+remarcar → "quero remarcar", "preciso remarcar", "mudar minha consulta", "trocar meu horário".
+  needs_clarification = false.
+
+REGRA CRÍTICA DE ENTIDADES: extraia entidades APENAS da mensagem atual.
+Se a mensagem atual é "qual o endereço?", "qual o telefone?", "qual o horário de funcionamento?",
+NÃO extraia medico_nome — mesmo que o contexto anterior mencione um médico.
+Perguntas sobre a clínica (endereço, telefone, horário de funcionamento) nunca têm medico_nome.
+
 Quando o paciente pergunta COMO é um exame ou QUAL O PREPARO, NÃO extraia atendimento_nome.
 É uma dúvida clínica (duvida_preparo), não intenção de agendar.
 """
