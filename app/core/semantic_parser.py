@@ -50,8 +50,12 @@ Regras de risk_level:
   medium → convênios, preços, políticas, autorização
   low    → saudação, bio de médico, endereço, FAQ geral
 
-needs_clarification = true quando a mensagem for ambígua e faltar informação
-essencial para continuar (ex: "quero marcar" sem médico nem procedimento).
+needs_clarification = true quando a mensagem for genuinamente ambígua (ex: "sim"
+sem contexto). Para intents transacionais (agendar, cancelar, remarcar, fila,
+etc.), use needs_clarification = false mesmo que faltem detalhes como médico,
+data ou procedimento — o sistema de agendamento coleta essas informações
+interativamente. needs_clarification = false também para perguntas operacionais
+claras como "tem vaga?", "tem horário disponível?" — não há ambiguidade.
 
 is_operational_query = true quando a resposta depende de dado em tempo real da API
 de agendamentos: agenda, disponibilidade de vaga, elegibilidade de convênio,
@@ -86,9 +90,16 @@ duvida_pos_procedimento → pergunta sobre cuidados APÓS cirurgia ou procedimen
   risk_level: high.
 
 duvida com is_operational_query=true → "quem faz", "qual médico faz", "vocês fazem", "tem esse exame",
-  "quais médicos atendem", "quais especialidades", "tem vaga", "qual horário disponível", "aceita X convênio"
+  "quais médicos atendem", "quais especialidades", "tem vaga", "tem horário disponível",
+  "qual horário disponível", "aceita X convênio". Para esses casos, needs_clarification = false.
 
-agendar → "quero marcar", "quero agendar", "preciso de uma consulta"
+duvida com is_operational_query=false → perguntas sobre horário de FUNCIONAMENTO da clínica,
+  endereço, telefone, como chegar. Esses dados vêm do banco de dados local.
+  IMPORTANTE: "horário de funcionamento", "que horas abre", "que horas fecha", "endereço",
+  "telefone", "onde fica" → intent = duvida (não duvida_orientacao).
+
+agendar → "quero marcar", "quero agendar", "preciso de uma consulta".
+  needs_clarification = false mesmo sem médico ou data especificados.
 
 Quando o paciente pergunta COMO é um exame ou QUAL O PREPARO, NÃO extraia atendimento_nome.
 É uma dúvida clínica (duvida_preparo), não intenção de agendar.

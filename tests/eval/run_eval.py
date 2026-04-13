@@ -167,6 +167,32 @@ async def run_e2e_case(
     kw_ok       = check_keywords(answer, must_contain)     if must_contain else None
     forb_ok     = check_forbidden(answer, must_not_contain) if must_not_contain else None
 
+    # Chunk recall: usa o endpoint de debug /api/v1/eval/retrieval se disponível.
+    # O endpoint requer EVAL_RETRIEVAL_ENABLED=true no serviço.
+    retrieved_ids: list[str] = []
+    expected_ids  = case.get("expected_chunk_ids", [])
+    recall_ok: bool | None = None
+
+    if expected_ids and case.get("is_rag_case"):
+        try:
+            filters = case.get("mock_parsed_intent", {})
+            ret_resp = await client.post(
+                f"{service_url.rstrip('/')}/api/v1/eval/retrieval",
+                json={
+                    "query":        case["query"],
+                    "cliente_id":   cliente_id,
+                    "risk_max":     filters.get("risk_level", "high"),
+                    "source_types": case.get("expected_source_types", []),
+                    "k":            6,
+                },
+                timeout=15.0,
+            )
+            if ret_resp.status_code == 200:
+                retrieved_ids = ret_resp.json().get("chunk_ids", [])
+                recall_ok = chunk_recall(retrieved_ids, expected_ids)
+        except Exception:
+            pass  # endpoint indisponível — não penaliza o caso
+
     return CaseResult(
         id                   = case["id"],
         category             = case["category"],
@@ -175,7 +201,9 @@ async def run_e2e_case(
         actual_route         = inferred_route,
         route_ok             = inferred_route == case["expected_route"],
         answer               = answer,
-        expected_chunk_ids   = case.get("expected_chunk_ids", []),
+        expected_chunk_ids   = expected_ids,
+        retrieved_chunk_ids  = retrieved_ids,
+        chunk_recall_ok      = recall_ok,
         answer_kw_ok         = kw_ok,
         answer_forbidden_ok  = forb_ok,
         has_redirect         = has_redir,

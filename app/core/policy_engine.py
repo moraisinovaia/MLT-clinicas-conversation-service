@@ -78,13 +78,18 @@ def decide_route(
     contraditórias. Perguntas sobre procedimentos vão direto ao RAG.
     """
 
-    # Regra 0: clarificação tem prioridade absoluta
-    if intent.needs_clarification or intent.confidence < 0.70:
-        return RouteDecision(route="clarify", reason="baixa confiança ou ambiguidade")
-
-    # Regra 1: intents transacionais → workflow (state machine + GT Inova API)
+    # Regra 0: intents transacionais → workflow antes de qualquer clarify.
+    # O workflow tem sua própria state machine para coletar dados faltantes (médico,
+    # data, procedimento). Chamar clarify aqui seria uma volta desnecessária.
+    # Alta prioridade: o LLM pode setar needs_clarification=True por falta de detalhe,
+    # mas isso não significa que o paciente está sendo ambíguo — só que precisa de mais
+    # perguntas, o que é responsabilidade do workflow.
     if intent.intent in TRANSACTIONAL_INTENTS:
         return RouteDecision(route="workflow", reason="intent transacional")
+
+    # Regra 1: clarificação — depois de transacionais, antes de tudo mais
+    if intent.needs_clarification or intent.confidence < 0.70:
+        return RouteDecision(route="clarify", reason="baixa confiança ou ambiguidade")
 
     # Regra 2: social/saudação/fora_escopo → direct (sem busca)
     if intent.intent in SOCIAL_INTENTS:
@@ -112,11 +117,13 @@ def decide_route(
         )
 
     # Regra 4c: localização/contato da clínica → SQL ANTES do fallback operacional.
-    # Precede Regra 4d porque "horário" aparece tanto em "horário de funcionamento"
-    # (clínica → SQL) quanto em "horário disponível" (agenda → workflow).
-    # Verificar location keywords primeiro resolve essa ambiguidade corretamente.
+    # Cobre DUVIDA e EXPLANATORY_INTENTS: o LLM às vezes classifica "qual o horário de
+    # funcionamento?" como duvida_orientacao. A verificação de keywords aqui garante a
+    # rota correta mesmo com misclassificação de intent.
+    # Precede Regra 4d e Regra 5 porque "horário" aparece tanto em "horário de
+    # funcionamento" (clínica → SQL) quanto em "horário disponível" (agenda → workflow).
     if (
-        intent.intent == IntentType.DUVIDA
+        intent.intent in ({IntentType.DUVIDA} | EXPLANATORY_INTENTS)
         and any(kw in intent.mensagem_usuario.lower() for kw in _LOCATION_KEYWORDS)
         and not intent.entities.medico_nome
     ):

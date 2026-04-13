@@ -22,7 +22,31 @@ def make_intent(
     )
 
 
-# ── Regra 0: clarificação ────────────────────────────────────────────────────
+# ── Regra 0: transacionais → workflow (antes de clarify) ────────────────────
+
+@pytest.mark.parametrize("intent", [
+    IntentType.AGENDAR, IntentType.REMARCAR, IntentType.CANCELAR,
+    IntentType.CONFIRMAR, IntentType.FILA, IntentType.RESPOSTA_FILA,
+    IntentType.TRANSBORDO,
+])
+def test_transactional_intents_route_workflow(intent):
+    p = make_intent(intent=intent)
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
+
+
+def test_transactional_with_needs_clarification_still_routes_workflow():
+    """needs_clarification=True não bloqueia transacionais — workflow coleta o que falta."""
+    p = make_intent(intent=IntentType.AGENDAR, needs_clarification=True)
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
+
+
+def test_transactional_with_low_confidence_still_routes_workflow():
+    """Confiança baixa não bloqueia transacionais."""
+    p = make_intent(intent=IntentType.AGENDAR, confidence=0.50)
+    assert decide_route(p, S.TRIAGEM).route == "workflow"
+
+
+# ── Regra 1: clarificação ────────────────────────────────────────────────────
 
 def test_needs_clarification_returns_clarify():
     p = make_intent(needs_clarification=True)
@@ -35,18 +59,6 @@ def test_low_confidence_returns_clarify():
 def test_exactly_070_is_not_clarify():
     p = make_intent(confidence=0.70, intent=IntentType.SOCIAL)
     assert decide_route(p, S.TRIAGEM).route == "direct"
-
-
-# ── Regra 1: transacionais → workflow ────────────────────────────────────────
-
-@pytest.mark.parametrize("intent", [
-    IntentType.AGENDAR, IntentType.REMARCAR, IntentType.CANCELAR,
-    IntentType.CONFIRMAR, IntentType.FILA, IntentType.RESPOSTA_FILA,
-    IntentType.TRANSBORDO,
-])
-def test_transactional_intents_route_workflow(intent):
-    p = make_intent(intent=intent)
-    assert decide_route(p, S.TRIAGEM).route == "workflow"
 
 
 # ── Regra 2: social → direct ─────────────────────────────────────────────────
@@ -67,6 +79,24 @@ def test_emergency_routes_direct():
     assert decide_route(p, S.TRIAGEM).route == "direct"
 
 
+# ── Regra 4c: localização (defensivo para EXPLANATORY_INTENTS misclassificados) ──
+
+def test_duvida_orientacao_with_location_keyword_routes_sql():
+    """LLM pode classificar 'horário de funcionamento' como duvida_orientacao.
+    Regra 4c deve capturar isso e redirecionar para sql."""
+    p = make_intent(intent=IntentType.DUVIDA_ORIENTACAO)
+    p.mensagem_usuario = "qual o horário de funcionamento da clínica?"
+    assert decide_route(p, S.TRIAGEM).route == "sql"
+
+
+def test_duvida_orientacao_with_location_keyword_and_medico_does_not_route_sql():
+    """Com médico mencionado, não aplica localização — é outra dúvida."""
+    p = make_intent(intent=IntentType.DUVIDA_ORIENTACAO, medico_nome="Dr. Marcelo")
+    p.mensagem_usuario = "qual o horário do Dr. Marcelo?"
+    # não deve ir para sql, cai para rag (Regra 5)
+    assert decide_route(p, S.TRIAGEM).route == "rag"
+
+
 # ── Regra 5: dúvida factual → sql ────────────────────────────────────────────
 
 def test_duvida_with_medico_no_procedure_routes_sql():
@@ -77,18 +107,21 @@ def test_duvida_with_convenio_no_procedure_routes_workflow():
     p = make_intent(convenio="Unimed")
     assert decide_route(p, S.TRIAGEM).route == "workflow"
 
-def test_duvida_with_medico_and_procedure_routes_hybrid():
-    """Médico + procedimento → hybrid (não sql)."""
+def test_duvida_with_medico_and_procedure_routes_rag():
+    """Médico + procedimento sem contexto operacional → rag (não hybrid, não sql)."""
     p = make_intent(medico_nome="Dr. Marcelo", atendimento_nome="MAPA 24h")
-    assert decide_route(p, S.TRIAGEM).route == "hybrid"
+    d = decide_route(p, S.TRIAGEM)
+    assert d.route == "rag"
+    assert d.filters is not None
+    assert "procedure_info" in d.filters.source_types
 
 
 # ── Regra 6: explicativos clínicos → rag ─────────────────────────────────────
 
 @pytest.mark.parametrize("intent,expected_sources", [
-    (IntentType.DUVIDA_PREPARO,          ["exam_prep", "medication_guide"]),
-    (IntentType.DUVIDA_ORIENTACAO,       ["policy", "procedure_info"]),
-    (IntentType.DUVIDA_POS_PROCEDIMENTO, ["post_procedure", "medication_guide"]),
+    (IntentType.DUVIDA_PREPARO,          ["exam_prep"]),
+    (IntentType.DUVIDA_ORIENTACAO,       ["policy", "procedure_info", "operational_script"]),
+    (IntentType.DUVIDA_POS_PROCEDIMENTO, ["exam_prep", "operational_script"]),
 ])
 def test_explanatory_intents_route_rag(intent, expected_sources):
     p = make_intent(intent=intent, risk_level="high")
@@ -99,11 +132,15 @@ def test_explanatory_intents_route_rag(intent, expected_sources):
     assert d.filters.risk_max == "high"
 
 
-# ── Regra 7: dúvida com procedimento → hybrid ────────────────────────────────
+# ── Regra 6: dúvida com procedimento (DUVIDA genérico) → rag ─────────────────
 
-def test_duvida_with_procedure_routes_hybrid():
+def test_duvida_with_procedure_routes_rag():
+    """atendimento_nome sem contexto operacional → rag direto (não hybrid)."""
     p = make_intent(atendimento_nome="Colonoscopia")
-    assert decide_route(p, S.TRIAGEM).route == "hybrid"
+    d = decide_route(p, S.TRIAGEM)
+    assert d.route == "rag"
+    assert d.filters is not None
+    assert d.filters.source_types == ["exam_prep", "procedure_info"]
 
 
 def test_duvida_operacional_convenio_routes_workflow():
@@ -144,10 +181,12 @@ def test_duvida_perfil_medico_idade_nao_vai_para_workflow():
     assert d.filters.source_types == ["doctor_bio", "procedure_info"]
 
 
-def test_duvida_explicativa_sem_contexto_operacional_nao_vai_para_workflow():
-    # is_operational_query=False → não dispara Regra 4 → hybrid
+def test_duvida_explicativa_sem_contexto_operacional_vai_para_rag():
+    # is_operational_query=False → não dispara Regra 4 → Regra 6 → rag (não hybrid)
     p = make_intent(atendimento_nome="Gonioscopia")
-    assert decide_route(p, S.TRIAGEM).route == "hybrid"
+    d = decide_route(p, S.TRIAGEM)
+    assert d.route == "rag"
+    assert d.filters.source_types == ["exam_prep", "procedure_info"]
 
 
 # ── DEFAULT: clarify ──────────────────────────────────────────────────────────

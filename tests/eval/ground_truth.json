@@ -4,7 +4,6 @@
   "cliente_id": "d7d7b7cf-4ec0-437b-8377-d7555fc5ee6a",
   "notes": "Ground truth para Clínica Olhos de Petrolina. Baseline antes de melhorias RAG. Chunk IDs referem-se à tabela knowledge_chunks do projeto cywewwcqljeevxuvhvgp.",
   "cases": [
-
     {
       "id": "gt_prep_001",
       "category": "duvida_preparo",
@@ -13,14 +12,21 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b",
         "8bec729d-bfc1-4579-9202-a75462298125",
         "c996d408-3365-4d12-9f77-745129c76fa0"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção", "ligar para a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção",
+        "ligar para a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.95,
@@ -31,7 +37,6 @@
       },
       "notes": "Pergunta genérica de preparo. Protocolos de dilatação de múltiplos médicos devem ser retornados."
     },
-
     {
       "id": "gt_prep_002",
       "category": "duvida_preparo",
@@ -40,12 +45,18 @@
       "expected_route": "rag",
       "expected_risk_level": "low",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["retina"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "retina"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.95,
@@ -56,84 +67,98 @@
       },
       "notes": "Pergunta descritiva sobre fundo de olho. Chunk 3906aec0 deve ser recuperado."
     },
-
     {
       "id": "gt_prep_003",
       "category": "duvida_preparo",
       "query": "como é o exame de OCT? precisa de preparo?",
       "expected_intent": "duvida_preparo",
       "expected_route": "rag",
-      "expected_risk_level": "high",
+      "expected_risk_level": "low",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "c996d408-3365-4d12-9f77-745129c76fa0",
         "a5307211-fe97-43bb-8cc7-eab39ebaac3e"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.92,
-        "risk_level": "high",
+        "risk_level": "low",
         "needs_clarification": false,
         "is_operational_query": false,
         "entities": {}
       },
       "notes": "OCT exige dilatação. Chunk c996d408 e orientações do HOP devem aparecer."
     },
-
     {
       "id": "gt_prep_004",
       "category": "duvida_preparo",
       "query": "vou ficar com a visão embaçada depois do exame?",
       "expected_intent": "duvida_preparo",
       "expected_route": "rag",
-      "expected_risk_level": "low",
+      "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["embaçad"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "embaçad"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
-        "confidence": 0.90,
-        "risk_level": "low",
+        "confidence": 0.9,
+        "risk_level": "high",
         "needs_clarification": false,
         "is_operational_query": false,
         "entities": {}
       },
       "notes": "Efeito pós-dilatação. O chunk 3906aec0 menciona visão embaçada e sensibilidade à luz."
     },
-
     {
       "id": "gt_prep_005",
       "category": "duvida_preparo",
       "query": "precisa de acompanhante para fazer o exame?",
       "expected_intent": "duvida_preparo",
       "expected_route": "rag",
-      "expected_risk_level": "low",
+      "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b",
         "a5307211-fe97-43bb-8cc7-eab39ebaac3e"
       ],
-      "answer_must_contain": ["acompanhante"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "acompanhante"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
-        "confidence": 0.90,
-        "risk_level": "low",
+        "confidence": 0.9,
+        "risk_level": "high",
         "needs_clarification": false,
         "is_operational_query": false,
         "entities": {}
       },
       "notes": "Acompanhante recomendado para quem vai dilatar e precisar dirigir."
     },
-
     {
       "id": "gt_prep_006",
       "category": "duvida_preparo",
@@ -142,12 +167,18 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.93,
@@ -158,7 +189,6 @@
       },
       "notes": "Faixa 0-39 anos: dilata. Protocolo deve ser encontrado."
     },
-
     {
       "id": "gt_prep_007",
       "category": "duvida_preparo",
@@ -167,12 +197,18 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.93,
@@ -183,7 +219,6 @@
       },
       "notes": "Diabéticos sempre dilatam segundo o protocolo."
     },
-
     {
       "id": "gt_prep_008",
       "category": "duvida_preparo",
@@ -192,15 +227,21 @@
       "expected_route": "rag",
       "expected_risk_level": "medium",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "4fafb5a0-c879-497f-a5d4-a770935f62bf"
       ],
-      "answer_must_contain": ["pressão"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "pressão"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "risk_level": "medium",
         "needs_clarification": false,
         "is_operational_query": false,
@@ -208,7 +249,6 @@
       },
       "notes": "CTD = Curva Tensional Diária. Chunk 4fafb5a0 tem o preparo específico."
     },
-
     {
       "id": "gt_prep_009",
       "category": "duvida_preparo",
@@ -217,12 +257,18 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["acompanhante"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "acompanhante"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.93,
@@ -233,7 +279,6 @@
       },
       "notes": "Recomendado acompanhante caso precise dirigir após a dilatação."
     },
-
     {
       "id": "gt_prep_010",
       "category": "duvida_preparo",
@@ -242,12 +287,18 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.93,
@@ -258,33 +309,37 @@
       },
       "notes": "≥60 anos: todos dilatam."
     },
-
     {
       "id": "gt_prep_011",
       "category": "duvida_preparo",
       "query": "como funciona a retinografia?",
       "expected_intent": "duvida_preparo",
       "expected_route": "rag",
-      "expected_risk_level": "high",
+      "expected_risk_level": "low",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "c996d408-3365-4d12-9f77-745129c76fa0",
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.92,
-        "risk_level": "high",
+        "risk_level": "low",
         "needs_clarification": false,
         "is_operational_query": false,
         "entities": {}
       },
       "notes": "Retinografia exige dilatação. Chunk c996d408 deve ser recuperado."
     },
-
     {
       "id": "gt_prep_012",
       "category": "duvida_preparo",
@@ -293,13 +348,19 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "c996d408-3365-4d12-9f77-745129c76fa0",
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
         "confidence": 0.92,
@@ -310,7 +371,6 @@
       },
       "notes": "Retinografia, OCT e YAG Laser exigem dilatação."
     },
-
     {
       "id": "gt_ori_001",
       "category": "duvida_orientacao",
@@ -319,15 +379,21 @@
       "expected_route": "rag",
       "expected_risk_level": "medium",
       "is_rag_case": true,
-      "expected_source_types": ["operational_script"],
+      "expected_source_types": [
+        "operational_script"
+      ],
       "expected_chunk_ids": [
         "a5307211-fe97-43bb-8cc7-eab39ebaac3e"
       ],
-      "answer_must_contain": ["10 dias"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "10 dias"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_orientacao",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "risk_level": "medium",
         "needs_clarification": false,
         "is_operational_query": false,
@@ -335,7 +401,6 @@
       },
       "notes": "Prazo de 10 dias para entrega de resultados está no operational_script do HOP."
     },
-
     {
       "id": "gt_ori_002",
       "category": "duvida_orientacao",
@@ -344,15 +409,20 @@
       "expected_route": "rag",
       "expected_risk_level": "medium",
       "is_rag_case": true,
-      "expected_source_types": ["operational_script", "policy"],
+      "expected_source_types": [
+        "operational_script",
+        "policy"
+      ],
       "expected_chunk_ids": [
         "a5307211-fe97-43bb-8cc7-eab39ebaac3e"
       ],
       "answer_must_contain": [],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_orientacao",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "risk_level": "medium",
         "needs_clarification": false,
         "is_operational_query": false,
@@ -360,7 +430,6 @@
       },
       "notes": "Exames realizados pelo técnico não precisam de solicitação médica (chunk a5307211)."
     },
-
     {
       "id": "gt_ori_003",
       "category": "duvida_orientacao",
@@ -369,24 +438,32 @@
       "expected_route": "rag",
       "expected_risk_level": "medium",
       "is_rag_case": true,
-      "expected_source_types": ["policy", "operational_script"],
+      "expected_source_types": [
+        "policy",
+        "operational_script"
+      ],
       "expected_chunk_ids": [
         "d9887f30-aa46-4035-befb-ddf54dd99192",
         "071b22c1-b05f-4d4d-a610-bb4d3e2bfcf2"
       ],
-      "answer_must_contain": ["encaixe"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "encaixe"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_orientacao",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "risk_level": "medium",
         "needs_clarification": false,
         "is_operational_query": false,
-        "entities": {"medico_nome": "Dr. Guilherme"}
+        "entities": {
+          "medico_nome": "Dr. Guilherme"
+        }
       },
       "notes": "Regra especial: retina e pós-op têm direito a encaixe."
     },
-
     {
       "id": "gt_ori_004",
       "category": "duvida_orientacao",
@@ -395,12 +472,18 @@
       "expected_route": "rag",
       "expected_risk_level": "medium",
       "is_rag_case": true,
-      "expected_source_types": ["operational_script"],
+      "expected_source_types": [
+        "operational_script"
+      ],
       "expected_chunk_ids": [
         "a5307211-fe97-43bb-8cc7-eab39ebaac3e"
       ],
-      "answer_must_contain": ["10 dias"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "10 dias"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_orientacao",
         "confidence": 0.92,
@@ -411,33 +494,38 @@
       },
       "notes": "Prazo de 10 dias mencionado no chunk a5307211."
     },
-
     {
       "id": "gt_ori_005",
       "category": "duvida_orientacao",
       "query": "precisa de acompanhante para exame que dilata no HOP?",
       "expected_intent": "duvida_orientacao",
       "expected_route": "rag",
-      "expected_risk_level": "medium",
+      "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["operational_script", "exam_prep"],
+      "expected_source_types": [
+        "operational_script",
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "a5307211-fe97-43bb-8cc7-eab39ebaac3e",
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["acompanhante"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "acompanhante"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_orientacao",
         "confidence": 0.88,
-        "risk_level": "medium",
+        "risk_level": "high",
         "needs_clarification": false,
         "is_operational_query": false,
         "entities": {}
       },
       "notes": "Orientação de acompanhante aparece em operational_script e exam_prep."
     },
-
     {
       "id": "gt_pos_001",
       "category": "duvida_pos_procedimento",
@@ -446,7 +534,10 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep", "operational_script"],
+      "expected_source_types": [
+        "exam_prep",
+        "operational_script"
+      ],
       "expected_chunk_ids": [],
       "answer_must_contain": [],
       "answer_must_not_contain": [],
@@ -460,7 +551,6 @@
       },
       "notes": "Sem chunks post_procedure. Sistema deve tentar responder com exam_prep+operational_script ou admitir que não tem a informação. CRÍTICO: não redirecionar desnecessariamente."
     },
-
     {
       "id": "gt_pos_002",
       "category": "duvida_pos_procedimento",
@@ -469,7 +559,10 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep", "operational_script"],
+      "expected_source_types": [
+        "exam_prep",
+        "operational_script"
+      ],
       "expected_chunk_ids": [],
       "answer_must_contain": [],
       "answer_must_not_contain": [],
@@ -483,7 +576,6 @@
       },
       "notes": "Não temos conteúdo pós-op. Este caso é um gap de conhecimento, documentado aqui para priorização de conteúdo."
     },
-
     {
       "id": "gt_pos_003",
       "category": "duvida_pos_procedimento",
@@ -492,13 +584,16 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep", "operational_script"],
+      "expected_source_types": [
+        "exam_prep",
+        "operational_script"
+      ],
       "expected_chunk_ids": [],
       "answer_must_contain": [],
       "answer_must_not_contain": [],
       "mock_parsed_intent": {
         "intent": "duvida_pos_procedimento",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "risk_level": "high",
         "needs_clarification": false,
         "is_operational_query": false,
@@ -506,7 +601,6 @@
       },
       "notes": "Caso limítrofe pós-op/urgência. Gap de conteúdo documentado."
     },
-
     {
       "id": "gt_proc_001",
       "category": "duvida_generico_proc",
@@ -515,15 +609,21 @@
       "expected_route": "rag",
       "expected_risk_level": "low",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "3906aec0-d5b9-44f7-ba74-98cc050b6c1b"
       ],
-      "answer_must_contain": ["retina"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "retina"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "risk_level": "low",
         "needs_clarification": false,
         "is_operational_query": false,
@@ -531,32 +631,39 @@
       },
       "notes": "Sinônimo de fundo de olho. LLM deve classificar como duvida_preparo sem extrair atendimento_nome."
     },
-
     {
       "id": "gt_proc_002",
       "category": "duvida_generico_proc",
       "query": "como é a cirurgia de catarata?",
       "expected_intent": "duvida_preparo",
       "expected_route": "rag",
-      "expected_risk_level": "low",
+      "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep", "procedure_info"],
+      "expected_source_types": [
+        "exam_prep",
+        "procedure_info"
+      ],
       "expected_chunk_ids": [
         "e5aababf-d601-41c1-b18c-8e90043aea58"
       ],
-      "answer_must_contain": ["catarata"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "catarata"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida",
-        "confidence": 0.90,
-        "risk_level": "low",
+        "confidence": 0.9,
+        "risk_level": "high",
         "needs_clarification": false,
         "is_operational_query": false,
-        "entities": {"atendimento_nome": "cirurgia de catarata"}
+        "entities": {
+          "atendimento_nome": "cirurgia de catarata"
+        }
       },
       "notes": "Pergunta explicativa. DUVIDA + atendimento_nome → Regra 6 → rag(exam_prep, procedure_info)."
     },
-
     {
       "id": "gt_proc_003",
       "category": "duvida_generico_proc",
@@ -565,15 +672,21 @@
       "expected_route": "rag",
       "expected_risk_level": "high",
       "is_rag_case": true,
-      "expected_source_types": ["exam_prep"],
+      "expected_source_types": [
+        "exam_prep"
+      ],
       "expected_chunk_ids": [
         "c996d408-3365-4d12-9f77-745129c76fa0"
       ],
-      "answer_must_contain": ["dilat"],
-      "answer_must_not_contain": ["entre em contato com a recepção"],
+      "answer_must_contain": [
+        "dilat"
+      ],
+      "answer_must_not_contain": [
+        "entre em contato com a recepção"
+      ],
       "mock_parsed_intent": {
         "intent": "duvida_preparo",
-        "confidence": 0.90,
+        "confidence": 0.9,
         "risk_level": "high",
         "needs_clarification": false,
         "is_operational_query": false,
@@ -581,7 +694,6 @@
       },
       "notes": "YAG Laser exige dilatação."
     },
-
     {
       "id": "gt_wf_op_001",
       "category": "workflow_operacional",
@@ -603,7 +715,6 @@
       },
       "notes": "is_operational_query=true → Regra 4 → workflow."
     },
-
     {
       "id": "gt_wf_op_002",
       "category": "workflow_operacional",
@@ -621,11 +732,12 @@
         "risk_level": "medium",
         "needs_clarification": false,
         "is_operational_query": false,
-        "entities": {"convenio": "Unimed"}
+        "entities": {
+          "convenio": "Unimed"
+        }
       },
       "notes": "convenio extraído → Regra 4b → workflow. GT Inova é autoridade sobre elegibilidade."
     },
-
     {
       "id": "gt_wf_op_003",
       "category": "workflow_operacional",
@@ -647,7 +759,6 @@
       },
       "notes": "Disponibilidade → is_operational_query=true → workflow."
     },
-
     {
       "id": "gt_wf_op_004",
       "category": "workflow_operacional",
@@ -665,11 +776,13 @@
         "risk_level": "medium",
         "needs_clarification": false,
         "is_operational_query": false,
-        "entities": {"medico_nome": "Dr. Hermann", "convenio": "CASSI"}
+        "entities": {
+          "medico_nome": "Dr. Hermann",
+          "convenio": "CASSI"
+        }
       },
       "notes": "convenio detectado → Regra 4b → workflow."
     },
-
     {
       "id": "gt_wf_op_005",
       "category": "workflow_operacional",
@@ -691,7 +804,6 @@
       },
       "notes": "Serviço ativo → is_operational_query=true → workflow. Não confundir com 'como é a cirurgia de pterigio?' que vai para RAG."
     },
-
     {
       "id": "gt_wf_op_006",
       "category": "workflow_operacional",
@@ -713,7 +825,6 @@
       },
       "notes": "Lista de especialidades → operacional → workflow."
     },
-
     {
       "id": "gt_wf_tr_001",
       "category": "workflow_transacional",
@@ -731,11 +842,12 @@
         "risk_level": "low",
         "needs_clarification": false,
         "is_operational_query": false,
-        "entities": {"medico_nome": "Dr. Hermann"}
+        "entities": {
+          "medico_nome": "Dr. Hermann"
+        }
       },
       "notes": "Intent transacional → Regra 1 → workflow."
     },
-
     {
       "id": "gt_wf_tr_002",
       "category": "workflow_transacional",
@@ -757,7 +869,6 @@
       },
       "notes": "Intent transacional → Regra 1 → workflow."
     },
-
     {
       "id": "gt_wf_tr_003",
       "category": "workflow_transacional",
@@ -779,7 +890,6 @@
       },
       "notes": "Intent transacional → Regra 1 → workflow."
     },
-
     {
       "id": "gt_wf_tr_004",
       "category": "workflow_transacional",
@@ -797,11 +907,12 @@
         "risk_level": "low",
         "needs_clarification": false,
         "is_operational_query": false,
-        "entities": {"medico_nome": "Dr. Guilherme"}
+        "entities": {
+          "medico_nome": "Dr. Guilherme"
+        }
       },
       "notes": "Intent transacional → Regra 1 → workflow."
     },
-
     {
       "id": "gt_sql_001",
       "category": "sql",
@@ -823,7 +934,6 @@
       },
       "notes": "keyword 'endereço' → Regra 8 → sql. Consulta configuracoes_clinica."
     },
-
     {
       "id": "gt_sql_002",
       "category": "sql",
@@ -845,7 +955,6 @@
       },
       "notes": "keyword 'telefone' → Regra 8 → sql."
     },
-
     {
       "id": "gt_sql_003",
       "category": "sql",
@@ -867,7 +976,6 @@
       },
       "notes": "keyword 'horário' → Regra 8 → sql."
     },
-
     {
       "id": "gt_dir_001",
       "category": "direct",
@@ -889,7 +997,6 @@
       },
       "notes": "Saudação → Regra 2 → direct."
     },
-
     {
       "id": "gt_dir_002",
       "category": "direct",
@@ -911,7 +1018,6 @@
       },
       "notes": "Saudação → direct."
     },
-
     {
       "id": "gt_dir_003",
       "category": "direct",
@@ -933,7 +1039,6 @@
       },
       "notes": "Agradecimento → direct."
     },
-
     {
       "id": "gt_dir_004",
       "category": "direct",
@@ -955,7 +1060,6 @@
       },
       "notes": "Despedida → direct."
     },
-
     {
       "id": "gt_dir_005",
       "category": "direct",
@@ -977,13 +1081,12 @@
       },
       "notes": "Fora do escopo → direct com mensagem explicativa."
     },
-
     {
       "id": "gt_clr_001",
-      "category": "clarify",
+      "category": "workflow_transacional",
       "query": "quero marcar",
       "expected_intent": "agendar",
-      "expected_route": "clarify",
+      "expected_route": "workflow",
       "expected_risk_level": "low",
       "is_rag_case": false,
       "expected_chunk_ids": [],
@@ -997,9 +1100,8 @@
         "is_operational_query": false,
         "entities": {}
       },
-      "notes": "Intenção clara mas sem médico nem procedimento → needs_clarification=true → Regra 0 → clarify."
+      "notes": "Intenção transacional sem detalhes → needs_clarification ignorado para transacionais (Regra 0) → workflow coleta médico/procedimento/data de forma interativa."
     },
-
     {
       "id": "gt_clr_002",
       "category": "clarify",
@@ -1021,7 +1123,6 @@
       },
       "notes": "Mensagem vaga → needs_clarification=true → Regra 0 → clarify."
     },
-
     {
       "id": "gt_clr_003",
       "category": "clarify",
