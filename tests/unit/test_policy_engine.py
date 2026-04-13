@@ -97,6 +97,14 @@ def test_duvida_orientacao_with_location_keyword_and_medico_does_not_route_sql()
     assert decide_route(p, S.TRIAGEM).route == "rag"
 
 
+def test_location_keyword_ignores_session_doctor_when_question_is_standalone():
+    p = make_intent(intent=IntentType.DUVIDA)
+    p.mensagem_usuario = "qual o endereço de vocês?"
+    session_entities = EntitySet(medico_nome="Dr. Guilherme")
+    d = decide_route(p, S.TRIAGEM, session_entities=session_entities)
+    assert d.route == "sql"
+
+
 # ── Regra 5: dúvida factual → sql ────────────────────────────────────────────
 
 def test_duvida_with_medico_no_procedure_routes_sql():
@@ -179,6 +187,24 @@ def test_duvida_perfil_medico_idade_nao_vai_para_workflow():
     assert d.route == "rag"
     assert d.filters is not None
     assert d.filters.source_types == ["doctor_bio", "procedure_info"]
+
+
+def test_duvida_contextual_perfil_medico_usa_session_entities():
+    p = make_intent()
+    p.mensagem_usuario = "e ele atende criancas?"
+    session_entities = EntitySet(medico_nome="Dr. Hermann")
+    d = decide_route(p, S.TRIAGEM, session_entities=session_entities)
+    assert d.route == "rag"
+    assert d.filters is not None
+    assert d.filters.source_types == ["doctor_bio", "procedure_info"]
+
+
+def test_duvida_contextual_factual_medico_usa_session_entities():
+    p = make_intent()
+    p.mensagem_usuario = "e qual o crm dele?"
+    session_entities = EntitySet(medico_nome="Dr. Hermann")
+    d = decide_route(p, S.TRIAGEM, session_entities=session_entities)
+    assert d.route == "sql"
 
 
 def test_duvida_explicativa_sem_contexto_operacional_vai_para_rag():

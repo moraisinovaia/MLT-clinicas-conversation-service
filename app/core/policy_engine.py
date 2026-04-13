@@ -1,6 +1,7 @@
 from __future__ import annotations
+import re
 from dataclasses import dataclass, field
-from app.models.intent import IntentType, ParsedIntent
+from app.models.intent import IntentType, ParsedIntent, EntitySet
 from app.models.state import ConversationState
 
 
@@ -39,6 +40,24 @@ _LOCATION_KEYWORDS = (
     "contato", "número", "numero",
 )
 
+_DOCTOR_CONTEXT_PATTERNS = (
+    r"\bele\b",
+    r"\bela\b",
+    r"\bdele\b",
+    r"\bdela\b",
+    r"\bcom ele\b",
+    r"\bcom ela\b",
+    r"\besse medico\b",
+    r"\bessa medica\b",
+    r"\besse doutor\b",
+    r"\bessa doutora\b",
+)
+
+_DOCTOR_STRUCTURED_FACT_KEYWORDS = (
+    "crm",
+    "rqe",
+)
+
 
 # ── Modelo de retorno ────────────────────────────────────────────────────────
 
@@ -62,6 +81,7 @@ class RouteDecision:
 def decide_route(
     intent:  ParsedIntent,
     state:   ConversationState,
+    session_entities: EntitySet | None = None,
 ) -> RouteDecision:
     """
     Recebe um ParsedIntent validado pelo Pydantic e o estado atual
@@ -133,9 +153,14 @@ def decide_route(
     # Garante que perguntas operacionais que o LLM não sinalizou como is_operational_query
     # (ex: "tem vaga?", "aceita Unimed?") ainda vão para o workflow em vez do RAG.
     # EntitySet.touches_live_operational_context() usa listas curadas de keywords.
+    contextual_entities = build_contextual_entities(
+        current_turn_entities=intent.entities,
+        session_entities=session_entities,
+        message=intent.mensagem_usuario,
+    )
     if (
         intent.intent == IntentType.DUVIDA
-        and intent.entities.touches_live_operational_context(intent.mensagem_usuario)
+        and contextual_entities.touches_live_operational_context(intent.mensagem_usuario)
     ):
         return RouteDecision(
             route="workflow",
@@ -172,7 +197,7 @@ def decide_route(
     # O LLM classificou como 'duvida' mas extraiu um procedimento → pergunta explicativa.
     # Ex: "o que é fundo de olho?", "como funciona a OCT?", "precisa de preparo?"
     # RAG direto — hybrid foi eliminado pois gerava 2 mensagens (SQL vazio + RAG real).
-    if intent.intent == IntentType.DUVIDA and intent.entities.atendimento_nome:
+    if intent.intent == IntentType.DUVIDA and contextual_entities.atendimento_nome:
         return RouteDecision(
             route="rag",
             reason="dúvida explicativa sobre procedimento — RAG direto",
@@ -182,10 +207,20 @@ def decide_route(
             ),
         )
 
+    # Regra 6b: fatos estruturados do médico (CRM/RQE) → SQL local.
+    # Mesmo quando o médico vem por anáfora contextual ("crm dele"), a fonte correta
+    # continua sendo dado cadastral estruturado, não conhecimento aprovado via RAG.
+    if (
+        intent.intent == IntentType.DUVIDA
+        and contextual_entities.medico_nome
+        and any(keyword in intent.mensagem_usuario.lower() for keyword in _DOCTOR_STRUCTURED_FACT_KEYWORDS)
+    ):
+        return RouteDecision(route="sql", reason="fato estruturado do médico — SQL local")
+
     # Regra 7: perfil estável do médico (CRM, especialidade, formação) → RAG
     if (
         intent.intent == IntentType.DUVIDA
-        and intent.entities.touches_doctor_profile_context(intent.mensagem_usuario)
+        and contextual_entities.touches_doctor_profile_context(intent.mensagem_usuario)
     ):
         return RouteDecision(
             route="rag",
@@ -198,8 +233,56 @@ def decide_route(
 
     # Regra 8: dúvida factual simples (médico sem procedimento) → SQL local.
     # Convênio nunca chega aqui (Regra 4/4b garantem). Só medico_nome sem atendimento_nome.
-    if intent.intent == IntentType.DUVIDA and intent.entities.is_factual_only():
+    if intent.intent == IntentType.DUVIDA and contextual_entities.is_factual_only():
         return RouteDecision(route="sql", reason="fato estruturado — SQL local")
 
     # DEFAULT: clarify — nunca improvisamos em contexto clínico
     return RouteDecision(route="clarify", reason="fallback: intenção não mapeada")
+
+
+def build_contextual_entities(
+    current_turn_entities: EntitySet,
+    session_entities: EntitySet | None,
+    message: str = "",
+) -> EntitySet:
+    """
+    current_turn_entities é a fonte primária.
+    session_entities só entra quando a mensagem traz referência contextual
+    explícita a médico/atendimento anterior.
+    """
+    if session_entities is None or not _has_doctor_context_reference(message):
+        return current_turn_entities
+
+    contextual = current_turn_entities.model_copy(deep=True)
+    for field in (
+        "medico_nome",
+        "atendimento_nome",
+        "convenio",
+        "convenio_canonico",
+    ):
+        if getattr(contextual, field) is None:
+            session_value = getattr(session_entities, field)
+            if session_value is not None:
+                setattr(contextual, field, session_value)
+    return contextual
+
+
+def _build_contextual_entities(
+    current_turn_entities: EntitySet,
+    session_entities: EntitySet | None,
+    message: str = "",
+) -> EntitySet:
+    """
+    Alias legado para manter compatibilidade interna enquanto o helper é usado
+    pelo conversation.py e pelos testes novos.
+    """
+    return build_contextual_entities(
+        current_turn_entities=current_turn_entities,
+        session_entities=session_entities,
+        message=message,
+    )
+
+
+def _has_doctor_context_reference(message: str = "") -> bool:
+    normalized = (message or "").lower()
+    return any(re.search(pattern, normalized) for pattern in _DOCTOR_CONTEXT_PATTERNS)

@@ -26,7 +26,7 @@ from app.models.intent import ParseError, IntentType, EntitySet, ParsedIntent
 from app.core.pre_parser import pre_parse
 from app.core.semantic_parser import semantic_parse
 from app.core.alias_lookup import canonicalize_entities
-from app.core.policy_engine import decide_route
+from app.core.policy_engine import build_contextual_entities, decide_route
 from app.core.state_machine import resolve_next_state
 from app.core.session import (
     load_session, save_session, build_context_string,
@@ -37,6 +37,43 @@ from app.routes import clarify, direct, rag, sql_route, workflow_route
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+_LOG_SAFE_ENTITY_FIELDS = {
+    "medico_nome",
+    "atendimento_nome",
+    "convenio",
+    "convenio_canonico",
+    "periodo",
+    "resposta_fila",
+}
+
+_LOG_REDACTED_ENTITY_FIELDS = {
+    "data_preferida",
+    "hora_consulta",
+    "agendamento_id",
+    "paciente_nome",
+    "paciente_celular",
+    "data_nascimento",
+}
+
+
+def _sanitize_entities_for_log(entities: EntitySet) -> dict[str, str]:
+    """
+    Mantém observabilidade do roteamento sem despejar PII/IDs completos em log.
+    """
+    sanitized: dict[str, str] = {}
+    raw = entities.model_dump(exclude_none=True)
+
+    for field in _LOG_SAFE_ENTITY_FIELDS:
+        value = raw.get(field)
+        if value:
+            sanitized[field] = value
+
+    for field in _LOG_REDACTED_ENTITY_FIELDS:
+        if raw.get(field):
+            sanitized[field] = "<redacted>"
+
+    return sanitized
 
 
 @router.post("/conversation", response_model=ConversationResponse)
@@ -135,27 +172,65 @@ async def conversation(req: ConversationRequest, request: Request):
                 parsed.entities, req.cliente_id, db
             )
 
-            # ── 6. Merge de entidades (Fix 1 + 5) ────────────────────────
-            # Acumula entidades entre requests sem sobrescrever com None.
-            # Persiste no ctx para o save_session.
-            ctx.entities_coletadas = merge_entities(ctx.entities_coletadas, parsed.entities)
-            # Usa as entidades mescladas daqui para frente
-            parsed.entities = ctx.entities_coletadas
+            # ── 6. Separação explícita de entidades ───────────────────────
+            # current_turn_entities:
+            #   significado DESTA mensagem, usado como fonte primária do routing.
+            #
+            # session_entities:
+            #   acumulado da conversa até o turno anterior; só entra em regras
+            #   context-aware explícitas e como base do workflow.
+            #
+            # entities_for_workflow:
+            #   acumulado após incorporar o turno atual, usado para execução
+            #   transacional e persistência.
+            current_turn_entities = parsed.entities.model_copy()
+            session_entities = ctx.entities_coletadas.model_copy()
+            entities_for_workflow = merge_entities(session_entities, current_turn_entities)
+            ctx.entities_coletadas = entities_for_workflow
 
             # ── 7. Dados faltantes (Fix 4) ────────────────────────────────
-            # Cálculo real baseado no intent + entidades já coletadas.
-            # Alimenta o clarify para pedir 1 campo por vez.
-            ctx.dados_faltantes = compute_missing_fields(parsed, ctx.entities_coletadas)
+            # Usa entities_for_workflow para saber o que já foi coletado.
+            ctx.dados_faltantes = compute_missing_fields(parsed, entities_for_workflow)
 
             # ── 8. Policy engine ──────────────────────────────────────────
-            decision = decide_route(parsed, ctx.estado_atual)
+            # Routing usa current_turn_entities como fonte primária.
+            parsed_for_routing = parsed.model_copy(update={"entities": current_turn_entities})
+            contextual_entities_for_execution = build_contextual_entities(
+                current_turn_entities=current_turn_entities,
+                session_entities=session_entities,
+                message=req.message,
+            )
+            parsed_for_informational_execution = parsed.model_copy(
+                update={"entities": contextual_entities_for_execution}
+            )
+            parsed_for_workflow = parsed.model_copy(update={"entities": entities_for_workflow})
+            decision = decide_route(
+                parsed_for_routing,
+                ctx.estado_atual,
+                session_entities=session_entities,
+            )
+
+            logger.info(
+                "routing_decision trace=%s session=%s turn=%s intent=%s current_turn_entities=%s "
+                "session_entities=%s route=%s reason=%s",
+                trace_id,
+                req.session_id,
+                ctx.contador_turnos + 1,
+                parsed.intent.value,
+                _sanitize_entities_for_log(current_turn_entities),
+                _sanitize_entities_for_log(session_entities),
+                decision.route,
+                decision.reason,
+            )
 
             # ── 8b. Resolve IDs para filtros RAG (doctor_id, procedure_id) ─
-            # Só executa quando a rota usa RAG — evita query desnecessária.
+            # Usa o mesmo contexto semântico do roteamento informacional:
+            # current_turn_entities por padrão, com session_entities só quando a
+            # mensagem é explicitamente contextual/anaphórica.
             if decision.route == "rag" and decision.filters is not None:
                 doctor_id, procedure_id = await resolve_rag_ids(
-                    medico_nome      = parsed.entities.medico_nome,
-                    atendimento_nome = parsed.entities.atendimento_nome,
+                    medico_nome      = contextual_entities_for_execution.medico_nome,
+                    atendimento_nome = contextual_entities_for_execution.atendimento_nome,
                     cliente_id       = req.cliente_id,
                     db               = db,
                 )
@@ -164,10 +239,13 @@ async def conversation(req: ConversationRequest, request: Request):
 
             # ── 9. Executor da rota ───────────────────────────────────────
             if decision.route == "direct":
-                messages = direct.build_direct_response(parsed)
+                messages = direct.build_direct_response(parsed_for_informational_execution)
 
             elif decision.route == "clarify":
-                messages = clarify.build_clarify_response(parsed, ctx.dados_faltantes)
+                messages = clarify.build_clarify_response(
+                    parsed_for_informational_execution,
+                    ctx.dados_faltantes,
+                )
                 # Se o clarify foi para coletar dados de intent transacional,
                 # avança para coletando_dados para que o próximo turno seja processado
                 # pelo workflow (não pelo clarify novamente).
@@ -175,29 +253,33 @@ async def conversation(req: ConversationRequest, request: Request):
                     IntentType.AGENDAR, IntentType.REMARCAR,
                     IntentType.CANCELAR, IntentType.CONFIRMAR, IntentType.FILA,
                 }
-                _missing = compute_missing_fields(parsed, parsed.entities)
-                if parsed.intent in _transactional_collecting and _missing:
+                _missing = compute_missing_fields(parsed_for_workflow, entities_for_workflow)
+                if parsed_for_workflow.intent in _transactional_collecting and _missing:
                     novo_estado = ConversationState.COLETANDO_DADOS
 
             elif decision.route == "rag":
                 messages, feedback_id = await rag.execute_rag(
-                    parsed, decision.filters, req.cliente_id, db,
+                    parsed_for_informational_execution, decision.filters, req.cliente_id, db,
                     session_id=req.session_id, query=req.message,
                 )
 
             elif decision.route == "sql":
-                messages = await sql_route.execute_sql(parsed, req.cliente_id, db)
+                messages = await sql_route.execute_sql(
+                    parsed_for_informational_execution,
+                    req.cliente_id,
+                    db,
+                )
 
             elif decision.route == "workflow":
                 gt_inova = getattr(request.app.state, "gt_inova", None)
                 messages, next_state_val = await workflow_route.execute_workflow(
-                    parsed, ctx.estado_atual, ctx.dados_faltantes,
+                    parsed_for_workflow, ctx.estado_atual, ctx.dados_faltantes,
                     req.cliente_id, req.session_id, db, gt_inova,
                 )
                 if next_state_val:
                     novo_estado = resolve_next_state(
                         ctx.estado_atual,
-                        parsed.intent,
+                        parsed_for_workflow.intent,
                         ConversationState(next_state_val),
                     )
 

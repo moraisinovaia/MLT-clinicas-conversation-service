@@ -38,8 +38,12 @@ def safe_json_load(value, default):
 
 def merge_entities(existing: EntitySet, new: EntitySet) -> EntitySet:
     """
-    Fix 1 + 5: merge determinístico — nunca sobrescreve com None.
+    Merge determinístico para execução/persistência de workflow.
+
+    Nunca sobrescreve com None.
     Campos existentes são preservados; novos campos preenchem os vazios.
+    Não deve ser usado como fonte implícita de verdade para roteamento da
+    mensagem atual — routing usa current_turn_entities separadamente.
     """
     merged = existing.model_dump()
     for field, value in new.model_dump().items():

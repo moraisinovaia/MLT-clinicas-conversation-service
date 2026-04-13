@@ -57,6 +57,23 @@ def test_merge_both_empty_returns_empty():
     assert merged.medico_nome is None
 
 
+def test_merge_preserves_transacional_context_for_partial_followup():
+    existing = EntitySet(medico_nome="Dr. Guilherme")
+    new = EntitySet(data_preferida="amanhã", periodo="tarde")
+    merged = merge_entities(existing, new)
+    assert merged.medico_nome == "Dr. Guilherme"
+    assert merged.data_preferida == "amanhã"
+    assert merged.periodo == "tarde"
+
+
+def test_merge_preserves_workflow_context_even_after_informational_turn():
+    start = EntitySet(medico_nome="Dr. Guilherme")
+    after_info_turn = merge_entities(start, EntitySet())
+    after_followup = merge_entities(after_info_turn, EntitySet(data_preferida="amanhã"))
+    assert after_followup.medico_nome == "Dr. Guilherme"
+    assert after_followup.data_preferida == "amanhã"
+
+
 # ── compute_missing_fields (Fix 4) ───────────────────────────────────────────
 
 def make_intent(intent_type, **entities):

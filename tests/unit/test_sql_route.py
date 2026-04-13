@@ -75,7 +75,7 @@ async def test_sem_medico_retorna_config_clinica():
     row = MagicMock()
     row.__getitem__ = lambda self, k: {
         "nome_clinica": "Hospital de Olhos de Petrolina",
-        "endereco_completo": "Rua Exemplo, 123",
+        "endereco": "Rua Exemplo, 123",
         "telefone_publico": "(87) 99961-1057",
         "horario_funcionamento": "Seg-Sex 7h-17h",
     }[k]
@@ -113,7 +113,7 @@ async def test_convenio_sem_medico_vai_para_config_nao_responde_elegibilidade():
     row = MagicMock()
     row.__getitem__ = lambda self, k: {
         "nome_clinica": "HOP",
-        "endereco_completo": None,
+        "endereco": None,
         "telefone_publico": None,
         "horario_funcionamento": None,
     }[k]

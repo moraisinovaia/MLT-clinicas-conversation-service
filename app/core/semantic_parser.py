@@ -64,9 +64,14 @@ disponíveis (ex: "Dr. X faz Y?", "aceita Unimed?", "tem vaga?", "quais médicos
 atendem?", "quem atende lá?", "quais especialidades?"). False para perguntas
 explicativas, de preparo, perfil biográfico ou orientação clínica.
 
-IMPORTANTE: Extraia entidades SOMENTE do conteúdo da mensagem atual.
-NÃO herde entidades de mensagens anteriores no contexto.
-Se a mensagem não mencionar médico, atendimento ou convênio, deixe null.
+IMPORTANTE — regras de extração de entidades:
+1. Extraia entidades que estão REFERENCIADAS nesta mensagem (explícita ou anaforicamente).
+2. Resolva pronomes e referências anafóricas ("ele", "ela", "esse médico", "o doutor",
+   "aquele exame") usando o contexto da conversa para identificar a quem se referem.
+   Exemplo: contexto menciona Dr. Hermann → "e ele atende crianças?" → medico_nome = "Dr. Hermann"
+3. NÃO inclua entidades que não tenham qualquer referência nesta mensagem.
+   Exemplo: contexto menciona Dr. Hermann → "qual o endereço de vocês?" → medico_nome = null
+   (endereço é da clínica, não do médico — nenhuma referência ao médico nesta pergunta)
 
 Regras de classificação de intents informativos:
 

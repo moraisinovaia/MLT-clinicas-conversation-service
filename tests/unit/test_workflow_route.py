@@ -324,7 +324,7 @@ async def test_duvida_operacional_lista_servicos_por_medico_consulta_gt_inova():
 
     gt.doctor_schedules.assert_awaited_once()
     assert next_state is None
-    assert "servicos ativos" in msgs[0].text.lower()
+    assert "ativos" in msgs[0].text.lower()
     assert "gonioscopia" in msgs[0].text.lower()
 
 

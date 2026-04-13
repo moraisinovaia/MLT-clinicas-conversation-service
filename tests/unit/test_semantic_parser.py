@@ -1,5 +1,6 @@
 """Testa o parser sem chamar o LLM — valida extração e tratamento de erros."""
 import pytest
+from app.core import semantic_parser as sp
 from app.core.semantic_parser import _parse_raw, _extract_json
 from app.models.intent import IntentType, ParseError
 
@@ -70,3 +71,54 @@ def test_extract_json_from_text_with_preamble():
     text = 'Aqui está o JSON solicitado: {"intent": "duvida", "confidence": 0.9, "entities": {}, "risk_level": "low", "needs_clarification": false}'
     data = _extract_json(text)
     assert data["intent"] == "duvida"
+
+
+def test_system_prompt_allows_contextual_anaphora_resolution():
+    assert "resolva pronomes e referências anafóricas" in sp.SYSTEM_PROMPT.lower()
+    assert '"ele", "ela", "esse médico"' in sp.SYSTEM_PROMPT
+
+
+def test_system_prompt_blocks_importing_standalone_entities_from_history():
+    assert "não inclua entidades que não tenham qualquer referência nesta mensagem" in sp.SYSTEM_PROMPT.lower()
+
+
+@pytest.mark.asyncio
+async def test_semantic_parse_adds_media_hint_for_non_text(monkeypatch):
+    captured = {}
+
+    async def fake_call_llm(*, system, user):
+        captured["system"] = system
+        captured["user"] = user
+        return VALID_JSON
+
+    monkeypatch.setattr(sp, "call_llm", fake_call_llm)
+
+    result = await sp.semantic_parse(
+        message="",
+        context="Paciente enviou um áudio.",
+        cliente_info="cli-1",
+        media_type="audio",
+    )
+
+    assert result.intent == IntentType.AGENDAR
+    assert "Tipo de mídia recebida: audio." in captured["user"]
+
+
+@pytest.mark.asyncio
+async def test_semantic_parse_does_not_add_media_hint_for_text(monkeypatch):
+    captured = {}
+
+    async def fake_call_llm(*, system, user):
+        captured["user"] = user
+        return VALID_JSON
+
+    monkeypatch.setattr(sp, "call_llm", fake_call_llm)
+
+    await sp.semantic_parse(
+        message="quero agendar",
+        context="",
+        cliente_info="cli-1",
+        media_type="text",
+    )
+
+    assert "Tipo de mídia recebida:" not in captured["user"]
